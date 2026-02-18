@@ -1,0 +1,157 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Clientes | Sistema LEO{% endblock %}
+{% block section_title %}Gestión de Clientes{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-3">
+    <div class="row g-3 align-items-center mb-4">
+        <div class="col-12 col-md-4">
+            <h4 class="fw-bold text-dark mb-0">Directorio de Clientes</h4>
+        </div>
+        <div class="col-12 col-md-5">
+            <div class="input-group shadow-sm rounded-pill overflow-hidden border-0">
+                <span class="input-group-text bg-white border-0 ps-3">
+                    <i class="bi bi-search text-muted"></i>
+                </span>
+                <input type="text" id="inputBusqueda" class="form-control border-0 py-2" 
+                       placeholder="Buscar por DNI, nombre o celular...">
+            </div>
+        </div>
+        <div class="col-12 col-md-3 text-md-end">
+            <button class="btn btn-primary rounded-pill px-4 shadow-sm" data-bs-toggle="modal" data-bs-target="#modalCliente">
+                <i class="bi bi-person-plus-fill me-2"></i> Nuevo Cliente
+            </button>
+        </div>
+    </div>
+
+    <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0" id="tablaClientes">
+                <thead class="bg-light">
+                    <tr class="text-muted small fw-bold text-uppercase">
+                        <th class="ps-4 py-3">Cliente</th>
+                        <th>DNI</th>
+                        <th>Celular</th>
+                        <th>Correo</th>
+                        <th class="text-end pe-4">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for c in clientes %}
+                    <tr class="cliente-row">
+                        <td class="ps-4">
+                            <div class="d-flex align-items-center">
+                                <div class="avatar-circle me-3">{{ c.nombres|slice:":1" }}</div>
+                                <div>
+                                    <div class="fw-bold text-dark nombre-cliente">{{ c.nombres }} {{ c.apellidos }}</div>
+                                    <small class="text-muted">Registrado: {{ c.creado|date:"d/m/Y" }}</small>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="dni-cliente">{{ c.dni|default:"---" }}</td>
+                        <td class="celular-cliente">
+                            <a href="https://wa.me/51{{ c.celular }}" target="_blank" class="text-decoration-none text-dark">
+                                <i class="bi bi-whatsapp text-success me-1"></i> {{ c.celular }}
+                            </a>
+                        </td>
+                        <td>{{ c.correo|default:"---" }}</td>
+                        <td class="text-end pe-4">
+                            <button class="btn btn-sm btn-light rounded-circle border hover-primary" title="Editar">
+                                <i class="bi bi-pencil text-primary"></i>
+                            </button>
+                            <button class="btn btn-sm btn-light rounded-circle border hover-danger" title="Eliminar">
+                                <i class="bi bi-trash text-danger"></i>
+                            </button>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" class="text-center py-5 text-muted">No hay clientes registrados aún.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modalCliente" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow rounded-4">
+            <form method="POST" action="{% url 'crear_cliente' %}">
+                {% csrf_token %}
+                <div class="modal-header border-0 pt-4 px-4">
+                    <h5 class="fw-bold">Registrar Cliente</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body px-4">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold text-muted">DNI (Opcional)</label>
+                            <input type="text" name="dni" class="form-control border-0 bg-light py-2">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold text-muted">Celular</label>
+                            <input type="text" name="celular" class="form-control border-0 bg-light py-2" required>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label small fw-bold text-muted">Nombres</label>
+                            <input type="text" name="nombres" class="form-control border-0 bg-light py-2" required>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label small fw-bold text-muted">Apellidos</label>
+                            <input type="text" name="apellidos" class="form-control border-0 bg-light py-2" required>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label small fw-bold text-muted">Correo (Opcional)</label>
+                            <input type="email" name="correo" class="form-control border-0 bg-light py-2">
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer border-0 pb-4 px-4">
+                    <button type="submit" class="btn btn-primary w-100 rounded-3 fw-bold py-2">Guardar Cliente</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<style>
+    .avatar-circle {
+        width: 40px;
+        height: 40px;
+        background: linear-gradient(135deg, #eef2ff 0%, #e0e7ff 100%);
+        color: #4f46e5;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        font-size: 1rem;
+    }
+    .hover-primary:hover { background-color: #4f46e5 !important; color: white !important; }
+    .hover-danger:hover { background-color: #dc3545 !important; color: white !important; }
+    #inputBusqueda:focus { box-shadow: none; }
+</style>
+
+<script>
+    // Lógica de búsqueda en tiempo real
+    document.getElementById('inputBusqueda').addEventListener('keyup', function() {
+        let filtro = this.value.toLowerCase();
+        let filas = document.querySelectorAll('.cliente-row');
+
+        filas.forEach(fila => {
+            let nombre = fila.querySelector('.nombre-cliente').textContent.toLowerCase();
+            let dni = fila.querySelector('.dni-cliente').textContent.toLowerCase();
+            let celular = fila.querySelector('.celular-cliente').textContent.toLowerCase();
+
+            if (nombre.includes(filtro) || dni.includes(filtro) || celular.includes(filtro)) {
+                fila.style.display = "";
+            } else {
+                fila.style.display = "none";
+            }
+        });
+    });
+</script>
+{% endblock %}

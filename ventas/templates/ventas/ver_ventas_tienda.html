@@ -1,0 +1,192 @@
+{% extends 'core/base.html' %}
+{% block title %}Ventas del Día | {{ ubicacion.nombre }}{% endblock %}
+
+{% block section_title %}Reporte de Ventas Diarias{% endblock %}
+
+{% block content %}
+
+<div class="container-fluid py-2">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h4 class="fw-bold text-dark mb-1">
+                <i class="bi bi-shop text-primary me-2"></i>{{ ubicacion.nombre }}
+            </h4>
+            <p class="text-muted small mb-0">Resumen detallado de operaciones de hoy: <strong>{% now "d/m/Y" %}</strong></p>
+        </div>
+        <div class="text-end">
+            <span class="badge bg-primary-soft text-primary px-3 py-2 rounded-pill fw-bold">
+                <i class="bi bi-cart-check-fill me-1"></i> {{ cantidad_ventas }} Ventas registradas
+            </span>
+        </div>
+    </div>
+
+    <div class="row g-3 mb-4">
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm rounded-4 stat-card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <div class="icon-circle bg-light text-secondary"><i class="bi bi-door-open"></i></div>
+                    </div>
+                    <h6 class="text-muted small fw-semibold text-uppercase">Caja Inicial</h6>
+                    <h3 class="fw-bold mb-0">S/ {{ monto_apertura|floatformat:2 }}</h3>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm rounded-4 stat-card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <div class="icon-circle bg-success-soft text-success"><i class="bi bi-graph-up-arrow"></i></div>
+                        <span class="badge bg-success-soft text-success small">Hoy</span>
+                    </div>
+                    <h6 class="text-muted small fw-semibold text-uppercase">Total Vendido</h6>
+                    <h3 class="fw-bold text-success mb-0">S/ {{ total_vendido|floatformat:2 }}</h3>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm rounded-4 stat-card highlight-card text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <div class="icon-circle bg-white text-primary shadow-sm"><i class="bi bi-safe2"></i></div>
+                    </div>
+                    <h6 class="text-white-50 small fw-semibold text-uppercase">Saldo en Caja</h6>
+                    <h3 class="fw-bold text-white mb-0">S/ {{ total_en_caja|floatformat:2 }}</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <h6 class="fw-bold text-muted mb-3 text-uppercase small" style="letter-spacing: 1px;">Desglose por método de pago</h6>
+    <div class="row g-3 mb-4">
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm rounded-3 payment-card border-start border-4 border-success">
+                <div class="card-body py-2">
+                    <small class="text-muted d-block mb-1">💵 Efectivo</small>
+                    <h5 class="fw-bold text-success mb-0">S/ {{ total_efectivo|default:0|floatformat:2 }}</h5>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm rounded-3 payment-card border-start border-4 border-primary">
+                <div class="card-body py-2">
+                    <small class="text-muted d-block mb-1">📱 Yape / Plin</small>
+                    <h5 class="fw-bold text-primary mb-0">S/ {{ total_yape|default:0|floatformat:2 }}</h5>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm rounded-3 payment-card border-start border-4 border-warning">
+                <div class="card-body py-2">
+                    <small class="text-muted d-block mb-1">💳 Tarjeta</small>
+                    <h5 class="fw-bold text-warning mb-0">S/ {{ total_tarjeta|default:0|floatformat:2 }}</h5>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm rounded-3 payment-card border-start border-4 border-info">
+                <div class="card-body py-2">
+                    <small class="text-muted d-block mb-1">🏦 Transferencia</small>
+                    <h5 class="fw-bold text-info mb-0">S/ {{ total_transferencia|default:0|floatformat:2 }}</h5>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+        <div class="card-header bg-white py-3 border-bottom">
+            <div class="d-flex justify-content-between align-items-center">
+                <h6 class="mb-0 fw-bold text-dark">Listado de Transacciones</h6>
+                <button class="btn btn-sm btn-light border" onclick="window.print()"><i class="bi bi-printer me-1"></i> Imprimir Reporte</button>
+            </div>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="bg-light">
+                    <tr class="text-uppercase text-muted extra-small fw-bold">
+                        <th class="ps-4">Operación</th>
+                        <th class="text-center">Hora</th>
+                        <th>Vendedor</th>
+                        <th class="text-center">Método de Pago / Montos</th>
+                        <th class="text-end">Valor Mercadería</th>
+                        <th class="text-center pe-4" style="width: 100px;">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody class="border-top-0">
+                    {% for venta in ventas %}
+                    <tr {% if venta.anulada %}style="opacity: 0.5; background-color: #f8d7da33;"{% endif %}>
+                        <td class="ps-4">
+                            <span class="fw-bold text-dark">#{{ venta.id }}</span>
+                            {% if venta.venta_origen %}
+                                <br><span class="badge bg-warning text-dark extra-small" style="font-size: 0.6rem;">CAMBIO DE #{{ venta.venta_origen.id }}</span>
+                            {% endif %}
+                            {% if venta.anulada %}
+                                <br><span class="badge bg-danger extra-small" style="font-size: 0.6rem;">ANULADA</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-center text-muted small">
+                            {{ venta.fecha|time:"H:i" }}
+                        </td>
+                        <td>
+                            <div class="d-flex align-items-center">
+                                <span class="small fw-medium">{{ venta.usuario.username }}</span>
+                            </div>
+                        </td>
+                        <td class="text-center">
+                            {% for pago in venta.pagos.all %}
+                                <div class="d-inline-block m-1">
+                                    <span class="badge rounded-pill border text-dark fw-bold px-2 py-1 bg-white shadow-sm" style="font-size: 0.75rem;">
+                                        {% if pago.metodo == 'EFECTIVO' %}<span class="text-success">💵</span>
+                                        {% elif pago.metodo == 'TARJETA' %}<span class="text-warning">💳</span>
+                                        {% elif pago.metodo == 'TRANSFERENCIA' %}<span class="text-info">🏦</span>
+                                        {% else %}<span class="text-primary">📱</span>{% endif %}
+                                        {{ pago.metodo }}: <span class="text-secondary">S/ {{ pago.monto|floatformat:2 }}</span>
+                                    </span>
+                                </div>
+                            {% empty %}
+                                <span class="text-muted small">Sin pagos (S/ 0.00)</span>
+                            {% endfor %}
+                        </td>
+                        <td class="text-end">
+                            <span class="fw-bold text-dark">S/ {{ venta.total|floatformat:2 }}</span>
+                        </td>
+                        <td class="text-center pe-4">
+                            <a href="{% url 'boleta_venta' venta.id %}" target="_blank" class="btn btn-sm btn-outline-primary rounded-3 shadow-sm" title="Ver Boleta">
+                                <i class="bi bi-file-earmark-text"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="text-center py-5 text-muted">
+                            <i class="bi bi-inbox fs-2 d-block mb-2 opacity-25"></i>
+                            No se han registrado transacciones el día de hoy.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* ... (Mantiene tus estilos originales intactos) ... */
+    .stat-card { transition: transform 0.2s; }
+    .stat-card:hover { transform: translateY(-3px); }
+    .highlight-card { background: linear-gradient(135deg, #4f46e5 0%, #3b82f6 100%); }
+    .icon-circle { width: 35px; height: 35px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; }
+    .bg-primary-soft { background-color: #eef2ff; }
+    .bg-success-soft { background-color: #ecfdf5; }
+    .extra-small { font-size: 0.7rem; letter-spacing: 0.05rem; }
+    .table thead th { border-top: 0; }
+    @media print {
+        .sidebar, .topbar, .btn, .btn-group, header, .nav-buttons { display: none !important; }
+        .main-content { margin-left: 0 !important; }
+        .card { border: none !important; box-shadow: none !important; }
+    }
+</style>
+{% endblock %}

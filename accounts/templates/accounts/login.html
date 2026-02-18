@@ -1,0 +1,54 @@
+{% extends "accounts/base_login.html" %}
+
+{% block title %}Ingresar | Sistema LEO{% endblock %}
+
+{% block content %}
+<div class="card login-card p-4 shadow-lg">
+
+    <div class="text-center mb-4">
+        <div class="login-logo">WELLNESS<span class="brand-dot">.</span></div>
+        <div class="login-sub">SISTEMA DE GESTIÓN LEO</div>
+    </div>
+
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-danger py-2 text-center small">
+                {{ message }}
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <form method="post">
+        {% csrf_token %}
+
+        <div class="mb-3">
+            <label class="form-label small fw-bold text-muted">USUARIO</label>
+            <div class="input-group">
+                <span class="input-group-text">
+                    <i class="bi bi-person"></i>
+                </span>
+                <input type="text" name="username" class="form-control" placeholder="Nombre de usuario" required>
+            </div>
+        </div>
+
+        <div class="mb-4">
+            <label class="form-label small fw-bold text-muted">CONTRASEÑA</label>
+            <div class="input-group">
+                <span class="input-group-text">
+                    <i class="bi bi-lock"></i>
+                </span>
+                <input type="password" name="password" class="form-control" placeholder="••••••••" required>
+            </div>
+        </div>
+
+        <button type="submit" class="btn btn-dark w-100 btn-leo">
+            Acceder al Sistema
+        </button>
+    </form>
+
+    <div class="text-center mt-4 text-muted" style="font-size: 0.7rem;">
+        &copy; 2026 WELLNESS AREQUIPA <br>
+        <span class="fw-bold">Soporte Técnico Sistema LEO</span>
+    </div>
+</div>
+{% endblock %}

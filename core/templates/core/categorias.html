@@ -1,0 +1,165 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Categorías{% endblock %}
+
+{% block section_title %}Configuración de Productos{% endblock %}
+
+{% block content %}
+
+<div class="row mb-4 align-items-center">
+    <div class="col-md-6">
+        <h4 class="fw-bold text-dark mb-0">Categorías</h4>
+        <p class="text-muted small mb-0">Organiza tus productos por grupos o familias.</p>
+    </div>
+    <div class="col-md-6 text-md-end">
+        {% if request.user.is_staff %}
+            <a href="{% url 'crear_categoria' %}" class="btn btn-primary shadow-sm rounded-3 px-3">
+                <i class="bi bi-plus-lg me-1"></i> Nueva Categoría
+            </a>
+        {% endif %}
+    </div>
+</div>
+
+<div class="card shadow-sm border-0 rounded-4 mb-4">
+    <div class="card-body p-3">
+        <form method="get" class="row g-2 align-items-center">
+            <div class="col-md-5">
+                <div class="input-group">
+                    <span class="input-group-text bg-light border-0 text-muted"><i class="bi bi-funnel"></i></span>
+                    <input type="text" name="q" class="form-control border-0 bg-light" 
+                           placeholder="Filtrar por nombre (Ej: Leggins, Tops...)" value="{{ request.GET.q }}">
+                </div>
+            </div>
+            <div class="col-auto">
+                <button type="submit" class="btn btn-dark rounded-3 px-4 text-sm">Buscar</button>
+            </div>
+            {% if request.GET.q %}
+            <div class="col-auto">
+                <a href="{% url 'categorias' %}" class="btn btn-light rounded-3 text-muted">Limpiar</a>
+            </div>
+            {% endif %}
+        </form>
+    </div>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-lg-10">
+        <div class="card shadow-sm border-0 rounded-4 overflow-hidden">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="bg-light">
+                        <tr class="text-uppercase small text-muted fw-bold" style="letter-spacing: 0.5px; font-size: 11px;">
+                            <th class="ps-4 py-3">Nombre de Categoría</th>
+                            <th class="text-center py-3">Estado</th>
+                            <th class="text-end py-3 pe-4">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody class="border-top-0">
+                        {% for c in categorias %}
+                        <tr>
+                            <td class="ps-4 py-3">
+                                <div class="d-flex align-items-center">
+                                    <div class="avatar-cat bg-light text-secondary rounded-circle me-3">
+                                        <i class="bi bi-collection"></i>
+                                    </div>
+                                    <span class="fw-bold text-dark fs-6">{{ c.nombre }}</span>
+                                </div>
+                            </td>
+
+                            <td class="text-center">
+                                {% if c.activo %}
+                                    <span class="badge badge-soft-success">
+                                        <i class="bi bi-check-circle-fill me-1"></i> Activa
+                                    </span>
+                                {% else %}
+                                    <span class="badge badge-soft-secondary">
+                                        <i class="bi bi-slash-circle me-1"></i> Inactiva
+                                    </span>
+                                {% endif %}
+                            </td>
+
+                            <td class="text-end pe-4">
+                                <div class="d-flex justify-content-end gap-2">
+                                    <a href="#" class="btn btn-light btn-sm rounded-3 shadow-xs" title="Editar">
+                                        <i class="bi bi-pencil text-primary"></i>
+                                    </a>
+
+                                    <form method="post" action="{% url 'eliminar_categoria' c.id %}" 
+                                          onsubmit="return confirm('¿Estás seguro de eliminar esta categoría?');" 
+                                          class="d-inline">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-light btn-sm rounded-3 shadow-xs" title="Eliminar">
+                                            <i class="bi bi-trash text-danger"></i>
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="3" class="text-center py-5">
+                                <div class="py-3 text-muted">
+                                    <i class="bi bi-folder-x fs-1 opacity-25 d-block mb-3"></i>
+                                    <p>No se encontraron categorías.</p>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* Estilos Premium para Categorías */
+    .avatar-cat {
+        width: 36px;
+        height: 36px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1rem;
+        border: 1px solid #f1f5f9;
+    }
+
+    /* Soft Badges */
+    .badge-soft-success {
+        background-color: #d1fae5;
+        color: #065f46;
+        padding: 0.5rem 1rem;
+        border-radius: 50px;
+        font-weight: 600;
+        font-size: 0.75rem;
+    }
+
+    .badge-soft-secondary {
+        background-color: #f1f5f9;
+        color: #475569;
+        padding: 0.5rem 1rem;
+        border-radius: 50px;
+        font-weight: 600;
+        font-size: 0.75rem;
+    }
+
+    .shadow-xs {
+        box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+    }
+
+    .table tbody tr {
+        transition: all 0.2s;
+    }
+
+    .table tbody tr:hover {
+        background-color: #f8faff !important;
+    }
+
+    .form-control:focus {
+        background-color: #fff !important;
+        box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1) !important;
+        border: 1px solid #4f46e5 !important;
+    }
+</style>
+
+{% endblock %}

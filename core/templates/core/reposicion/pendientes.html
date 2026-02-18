@@ -1,0 +1,87 @@
+{% extends "core/base.html" %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h4 class="mb-0">Reposición pendiente</h4>
+    <a href="{% url 'historial_reposiciones' %}" class="btn btn-primary btn-sm rounded-3 shadow-sm">
+        <i class="bi bi-archive-fill me-1"></i> Ver Historial de Almacén
+    </a>
+</div>
+
+{% for traspaso in traspasos %}
+<div class="card mb-4 shadow-sm">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <strong>Tienda: {{ traspaso.nombre_tienda }}</strong>
+        <button class="btn btn-sm btn-success ejecutar-reposicion"
+                data-id="{{ traspaso.id }}">
+            <i class="bi bi-check-circle"></i> Ejecutar reposición
+        </button>
+    </div>
+
+    <div class="card-body p-0">
+        <table class="table table-sm table-striped mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th>Código</th>
+                    <th>Diseño</th>
+                    <th>Color</th>
+                    <th>Talla</th>
+                    <th>Marca</th>
+                    <th>Categoría</th>
+                    <th>Precio</th>
+                    <th class="text-center">Cantidad</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for d in traspaso.detalles.all %}
+                <tr>
+                    <td><strong>{{ d.producto.codigo }}</strong></td>
+                    <td>{{ d.producto.diseno }}</td>
+                    <td>{{ d.producto.color }}</td>
+                    <td>{{ d.producto.talla }}</td>
+                    <td>{{ d.producto.marca }}</td>
+                    <td>{{ d.producto.categoria.nombre }}</td>
+                    <td>S/ {{ d.producto.precio }}</td>
+                    <td class="text-center">{{ d.cantidad }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% empty %}
+<p>No hay reposiciones pendientes.</p>
+{% endfor %}
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const buttons = document.querySelectorAll('.ejecutar-reposicion');
+
+    buttons.forEach(button => {
+        button.addEventListener('click', function() {
+            const traspasoId = this.dataset.id;
+
+            Swal.fire({
+                title: '¿Confirmar reposición?',
+                text: 'El stock será movido del almacén a la tienda.',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#198754',
+                confirmButtonText: 'Sí, reponer',
+                cancelButtonText: 'Cancelar'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // Usamos el nombre 'ejecutar_traspaso' que está en tu urls.py
+                    // El 99999 es un placeholder para reemplazarlo por el ID real en JS
+                    const url = "{% url 'ejecutar_traspaso' 99999 %}".replace('99999', traspasoId);
+                    window.location.href = url;
+                }
+            });
+        });
+    });
+});
+</script>
+{% endblock %}

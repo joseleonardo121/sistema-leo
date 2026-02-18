@@ -1,0 +1,287 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Sistema LEO | Wellness{% endblock %}</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Oswald:wght@600&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+
+    <style>
+        :root {
+            --sidebar-width: 260px;
+            --primary-color: #4dabf7; /* Azul Wellness */
+            --bg-body: #f1f5f9;
+            --sidebar-bg: #001529; /* Azul Marino Profundo */
+            --topbar-height: 65px;
+            --accent-active: rgba(255, 255, 255, 0.1);
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-body);
+            color: #1e293b;
+            margin: 0;
+        }
+
+        /* --- SIDEBAR MEJORADO --- */
+        .sidebar {
+            width: var(--sidebar-width);
+            background-color: var(--sidebar-bg);
+            height: 100vh;
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: 1050;
+            box-shadow: 4px 0 10px rgba(0,0,0,0.1);
+        }
+
+        .sidebar-logo {
+            padding: 1.5rem;
+            font-family: 'Oswald', sans-serif;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: white;
+            letter-spacing: 1px;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            display: flex;
+            align-items: center;
+        }
+
+        .sidebar-menu {
+            padding: 1rem 0;
+            overflow-y: auto;
+            height: calc(100vh - 80px);
+        }
+
+        .sidebar-section {
+            padding: 1.2rem 1.5rem 0.5rem;
+            font-size: 0.65rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            color: #64748b;
+            letter-spacing: 0.1em;
+        }
+
+        .sidebar-menu a {
+            display: flex;
+            align-items: center;
+            padding: 0.8rem 1.5rem;
+            color: #cbd5e1;
+            text-decoration: none;
+            font-size: 0.9rem;
+            margin: 0.2rem 10px;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+        }
+
+        .sidebar-menu a:hover {
+            color: white;
+            background: var(--accent-active);
+        }
+
+        .sidebar-menu a.active {
+            color: white;
+            background: var(--primary-color);
+            font-weight: 600;
+            box-shadow: 0 4px 12px rgba(77, 171, 247, 0.3);
+        }
+
+        .sidebar-menu a i { 
+            margin-right: 12px; 
+            font-size: 1.2rem;
+            opacity: 0.8;
+        }
+
+        /* --- CONTENIDO PRINCIPAL --- */
+        .main-content {
+            margin-left: var(--sidebar-width);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .topbar {
+            height: var(--topbar-height);
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(10px);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 2rem;
+            border-bottom: 1px solid #e2e8f0;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .user-pill {
+            background: white;
+            padding: 5px 12px;
+            border-radius: 10px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            border: 1px solid #e2e8f0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+        }
+
+        .content-body {
+            padding: 2rem;
+            flex-grow: 1;
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .estado-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            display: inline-block;
+            box-shadow: 0 0 0 2px rgba(255,255,255,1), 0 0 8px currentColor;
+        }
+        
+        /* Personalización de scrollbar del sidebar */
+        .sidebar-menu::-webkit-scrollbar { width: 4px; }
+        .sidebar-menu::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 10px; }
+    </style>
+</head>
+<body>
+
+    {% if request.user.is_authenticated %}
+    <aside class="sidebar">
+        <div class="sidebar-logo">
+            <i class="bi bi-activity text-primary me-2"></i> WELLNESS<span class="text-primary">.</span>
+        </div>
+        <nav class="sidebar-menu">
+            
+            <div class="sidebar-section">Inventario</div>
+            <a href="{% url 'stock' %}" class="{% if request.resolver_match.url_name == 'stock' %}active{% endif %}">
+                <i class="bi bi-box-seam"></i> Stock General
+            </a>
+
+            {% if request.user.is_staff or not request.user.groups.all.0.name == "Almacenero" %}
+            <div class="sidebar-section">Ventas</div>
+            <a href="{% url 'pos' %}" class="{% if request.resolver_match.url_name == 'pos' %}active{% endif %}">
+                <i class="bi bi-plus-circle-fill"></i> Nueva Venta
+            </a>
+            <a href="{% url 'historial_ventas' %}" class="{% if request.resolver_match.url_name == 'historial_ventas' %}active{% endif %}">
+                <i class="bi bi-receipt"></i> Historial / Cambios
+            </a>
+            <a href="{% url 'mis_ventas_hoy' %}" class="{% if request.resolver_match.url_name == 'mis_ventas_hoy' %}active{% endif %}">
+                <i class="bi bi-graph-up-arrow"></i> Ventas Hoy
+            </a>
+            <a href="{% url 'lista_clientes' %}" class="{% if request.resolver_match.url_name == 'lista_clientes' %}active{% endif %}">
+                <i class="bi bi-person-badge"></i> Clientes
+            </a>
+            {% endif %}
+
+            <div class="sidebar-section">Logística</div>
+            <a href="{% url 'traspaso_tienda_a_tienda' %}" class="{% if request.resolver_match.url_name == 'traspaso_tienda_a_tienda' %}active{% endif %}">
+                <i class="bi bi-truck"></i> Traspasos
+            </a>
+
+            {% if request.user.is_staff or request.user.groups.all.0.name == "Almacenero" %}
+            <div class="sidebar-section">Operaciones</div>
+            <a href="{% url 'productos' %}" class="{% if request.resolver_match.url_name == 'productos' %}active{% endif %}">
+                <i class="bi bi-tags"></i> Productos
+            </a>
+            <a href="{% url 'generar_reposicion' %}" class="{% if request.resolver_match.url_name == 'generar_reposicion' %}active{% endif %}">
+                <i class="bi bi-arrow-repeat"></i> Reposición
+            </a>
+            {% endif %}
+
+            {% if request.user.is_staff %}
+            <div class="sidebar-section">Gestión Admin</div>
+            <a href="{% url 'categorias' %}" class="{% if request.resolver_match.url_name == 'categorias' %}active{% endif %}">
+                <i class="bi bi-collection"></i> Categorías
+            </a>
+            <a href="{% url 'panel_cajas' %}" class="{% if request.resolver_match.url_name == 'panel_cajas' %}active{% endif %}">
+                <i class="bi bi-wallet2"></i> Cajas
+            </a>
+            <a href="{% url 'reporte_mensual' %}" class="{% if request.resolver_match.url_name == 'reporte_mensual' %}active{% endif %}">
+                <i class="bi bi-bar-chart-line"></i> Reportes
+            </a>
+            <a href="{% url 'reporte_pedidos' %}" class="{% if request.resolver_match.url_name == 'reporte_pedidos' %}active{% endif %}">
+                <i class="bi bi-clipboard-plus"></i> Hacer Pedido
+            </a>
+            <a href="{% url 'reporte_inversion' %}" class="{% if request.resolver_match.url_name == 'reporte_inversion' %}active{% endif %}">
+                <i class="bi bi-piggy-bank"></i> Reporte Inversión
+            </a>
+            {% endif %}
+        </nav>
+    </aside>
+    {% endif %}
+
+    <div class="{% if request.user.is_authenticated %}main-content{% endif %}">
+        
+        <header class="topbar px-4">
+            <div class="d-flex align-items-center">
+                <h5 class="mb-0 fs-5 fw-bold text-dark">
+                    {% block section_title %}Panel de Control{% endblock %}
+                </h5>
+            </div>
+
+            <div class="d-flex align-items-center gap-3">
+                {% if request.user.is_authenticated %}
+                    <div class="d-none d-md-block">
+                        {% if not request.user.is_staff and not request.user.groups.all.0.name == "Almacenero" %}
+                            {% if caja_actual %}
+                                <div class="badge d-flex align-items-center gap-2 px-3 py-2 rounded-pill bg-light text-success border border-success-subtle">
+                                    <span class="estado-dot bg-success"></span> 
+                                    <span class="fw-bold">{{ caja_actual.ubicacion.nombre }}</span>
+                                </div>
+                            {% else %}
+                                <div class="badge d-flex align-items-center gap-2 px-3 py-2 rounded-pill bg-light text-danger border border-danger-subtle">
+                                    <span class="estado-dot bg-danger"></span> 
+                                    <span class="fw-bold">Caja Cerrada</span>
+                                </div>
+                            {% endif %}
+                        {% endif %}
+                    </div>
+
+                    <div class="user-pill">
+                        <div class="d-flex flex-column text-end d-none d-lg-block">
+                            <span class="d-block lh-1" style="font-size: 0.8rem;">{{ request.user.username }}</span>
+                            <small class="text-muted" style="font-size: 0.65rem;">
+                                {% if request.user.is_staff %}Administrador{% else %}{{ request.user.groups.all.0.name|default:"Vendedor" }}{% endif %}
+                            </small>
+                        </div>
+                        <i class="bi bi-person-circle fs-4 text-primary"></i>
+                    </div>
+
+                    <a href="{% url 'logout' %}" class="btn btn-icon btn-light rounded-circle shadow-sm" title="Cerrar Sesión">
+                        <i class="bi bi-power text-danger"></i>
+                    </a>
+                {% endif %}
+            </div>
+        </header>
+
+        <main class="content-body">
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }} border-0 shadow-sm rounded-4 mb-4 d-flex align-items-center" role="alert">
+                        <i class="bi bi-info-circle-fill me-2"></i>
+                        <div>{{ message }}</div>
+                    </div>
+                {% endfor %}
+            {% endif %}
+
+            {% block content %}{% endblock %}
+        </main>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

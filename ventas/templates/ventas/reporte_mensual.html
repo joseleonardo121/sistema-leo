@@ -1,0 +1,141 @@
+{% extends "core/base.html" %}
+
+{% block title %}Reporte Mensual | {{ mes }}-{{ anio }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-3">
+
+    <div class="d-flex justify-content-between align-items-center mb-4 pb-3 border-bottom d-print-none">
+        <div>
+            <h4 class="fw-bold text-dark mb-1">
+                <i class="bi bi-calendar-check text-primary me-2"></i>Reporte Mensual de Ventas
+            </h4>
+            <p class="text-muted small mb-0">Periodo contable: <strong>{{ mes }} / {{ anio }}</strong></p>
+        </div>
+
+        <div class="d-flex gap-2">
+            <button class="btn btn-white border shadow-sm rounded-3 px-3" onclick="window.print()">
+                <i class="bi bi-printer-fill me-1"></i> Imprimir Reporte
+            </button>
+        </div>
+    </div>
+
+    <div class="row g-3 mb-4">
+        <div class="col-md-6">
+            <div class="card border-0 shadow-sm rounded-4 bg-primary text-white">
+                <div class="card-body p-4">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <small class="text-uppercase opacity-75 fw-bold" style="letter-spacing: 1px;">Ingreso Total Bruto</small>
+                            <h2 class="fw-bold mb-0 mt-1">S/ {{ total_general }}</h2>
+                        </div>
+                        <i class="bi bi-cash-stack fs-1 opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card border-0 shadow-sm rounded-4 bg-success text-white">
+                <div class="card-body p-4">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <small class="text-uppercase opacity-75 fw-bold" style="letter-spacing: 1px;">Utilidad Estimada (60%)</small>
+                            <h2 class="fw-bold mb-0 mt-1">S/ {{ total_ganancia }}</h2>
+                        </div>
+                        <i class="bi bi-graph-up-arrow fs-1 opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+        <div class="card-header bg-white py-3 border-bottom">
+            <h6 class="mb-0 fw-bold text-muted">
+                <i class="bi bi-shop me-2"></i>Desglose por Ubicación
+            </h6>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="bg-light">
+                        <tr class="text-uppercase text-muted extra-small fw-bold">
+                            <th class="ps-4 py-3">Tienda / Sucursal</th>
+                            <th class="text-center">Monto Vendido</th>
+                            <th class="text-end pe-4">Ganancia Calculada</th>
+                        </tr>
+                    </thead>
+                    <tbody class="border-top-0">
+                        {% for r in resumen %}
+                        <tr>
+                            <td class="ps-4">
+                                <div class="d-flex align-items-center">
+                                    <div class="p-2 bg-light rounded-circle me-3 d-flex align-items-center justify-content-center" style="width: 35px; height: 35px;">
+                                        <i class="bi bi-geo-alt text-primary small"></i>
+                                    </div>
+                                    <span class="fw-bold text-dark">{{ r.tienda }}</span>
+                                </div>
+                            </td>
+                            <td class="text-center">
+                                <span class="fw-medium">S/ {{ r.total }}</span>
+                            </td>
+                            <td class="text-end pe-4">
+                                <span class="badge bg-success-soft text-success px-3 py-2 rounded-pill fw-bold">
+                                    S/ {{ r.ganancia }}
+                                </span>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                    <tfoot class="bg-light-subtle border-top">
+                        <tr class="fw-bold text-dark">
+                            <td class="ps-4 py-3">TOTALIZADO GENERAL</td>
+                            <td class="text-center">S/ {{ total_general }}</td>
+                            <td class="text-end pe-4 fs-5 text-success">S/ {{ total_ganancia }}</td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="mt-4 d-none d-print-block">
+        <hr>
+        <p class="small text-muted text-center">
+            Reporte generado automáticamente por el Sistema LEO el {% now "d/m/Y H:i" %}
+        </p>
+    </div>
+
+</div>
+
+<style>
+    .extra-small { font-size: 0.7rem; letter-spacing: 0.05rem; }
+    
+    .bg-success-soft {
+        background-color: #e6fcf5;
+    }
+
+    .card-header {
+        border-bottom: 1px solid #f1f5f9;
+    }
+
+    .table thead th {
+        border-bottom: 0;
+    }
+
+    /* Optimización para Impresión */
+    @media print {
+        body { background: white !important; }
+        .shadow-sm, .shadow { box-shadow: none !important; }
+        .card { border: 1px solid #eee !important; }
+        .container-fluid { width: 100% !important; padding: 0 !important; }
+        .bg-primary, .bg-success { 
+            background-color: transparent !important; 
+            color: black !important; 
+            border: 1px solid #eee !important;
+        }
+        .bg-primary *, .bg-success * { color: black !important; }
+        .btn, .d-print-none { display: none !important; }
+    }
+</style>
+{% endblock %}

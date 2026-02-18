@@ -1,0 +1,197 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Catálogo de Productos{% endblock %}
+
+{% block section_title %}Gestión de Catálogo{% endblock %}
+
+{% block content %}
+
+<div class="row mb-4 align-items-center">
+    <div class="col-md-6">
+        <h4 class="fw-bold text-dark mb-0">Productos</h4>
+        <p class="text-muted small mb-0">Catálogo maestro de artículos, costos y precios de venta.</p>
+    </div>
+    <div class="col-md-6 text-md-end">
+        <a href="{% url 'crear_producto' %}" class="btn btn-primary shadow-sm rounded-3 px-3">
+            <i class="bi bi-plus-lg me-1"></i> Nuevo Producto
+        </a>
+    </div>
+</div>
+
+<div class="card shadow-sm border-0 rounded-4 mb-4">
+    <div class="card-body p-3">
+        <form method="get" class="row g-2 align-items-center">
+            <div class="col-md-2">
+                <div class="input-group input-group-sm">
+                    <span class="input-group-text bg-light border-0"><i class="bi bi-hash"></i></span>
+                    <input type="text" name="codigo" class="form-control border-0 bg-light" placeholder="Código" value="{{ request.GET.codigo|default:'' }}">
+                </div>
+            </div>
+
+            <div class="col-md-2">
+                <select name="categoria" class="form-select form-select-sm border-0 bg-light">
+                    <option value="">Categorías</option>
+                    {% for c in categorias %}
+                        <option value="{{ c.id }}" {% if request.GET.categoria == c.id|stringformat:"s" %}selected{% endif %}>
+                            {{ c.nombre }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="col-md-1">
+                <input type="text" name="talla" class="form-control form-control-sm border-0 bg-light" placeholder="Talla" value="{{ request.GET.talla|default:'' }}">
+            </div>
+
+            <div class="col-md-2">
+                <input type="text" name="diseno" class="form-control form-control-sm border-0 bg-light" placeholder="Diseño" value="{{ request.GET.diseno|default:'' }}">
+            </div>
+
+            <div class="col-md-1">
+                <input type="text" name="color" class="form-control form-control-sm border-0 bg-light" placeholder="Color" value="{{ request.GET.color|default:'' }}">
+            </div>
+
+            <div class="col-md-2">
+                <input type="text" name="marca" class="form-control form-control-sm border-0 bg-light" placeholder="Marca" value="{{ request.GET.marca|default:'' }}">
+            </div>
+
+            <div class="col-md-2">
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-dark btn-sm w-100 rounded-3 shadow-sm">
+                        <i class="bi bi-search"></i> Filtrar
+                    </button>
+                    <a href="{% url 'productos' %}" class="btn btn-light btn-sm rounded-3">
+                        <i class="bi bi-x-lg"></i>
+                    </a>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="card shadow-sm border-0 rounded-4 overflow-hidden">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="bg-light">
+                <tr class="text-uppercase small text-muted fw-bold" style="letter-spacing: 0.5px; font-size: 11px;">
+                    <th class="ps-4 py-3" style="width: 50px;">Estado</th>
+                    <th class="py-3">Información del Producto</th>
+                    <th class="py-3 text-center">Stock Actual</th>
+                    <th class="py-3 text-center">Categoría</th>
+                    <th class="text-end py-3">Finanzas (S/)</th>
+                    <th class="text-center py-3 pe-4">Acciones</th>
+                </tr>
+            </thead>
+
+            <tbody class="border-top-0">
+            {% for p in productos %}
+                <tr class="{% if not p.activo %}bg-light opacity-75{% endif %}">
+                    <td class="ps-4 text-center">
+                        <span class="estado-dot {% if p.activo %}bg-success-soft{% else %}bg-danger-soft{% endif %}" 
+                              data-bs-toggle="tooltip" title="{% if p.activo %}Activo{% else %}Inactivo{% endif %}">
+                        </span>
+                    </td>
+
+                    <td>
+                        <div class="d-flex align-items-center">
+                            <div class="avatar-product bg-light text-primary rounded-3 me-3">
+                                <i class="bi bi-tag-fill"></i>
+                            </div>
+                            <div>
+                                <div class="fw-bold text-dark mb-0">{{ p.codigo }}</div>
+                                <div class="text-muted small">
+                                    <span class="fw-medium text-secondary">{{ p.marca }}</span> 
+                                    <span class="text-silver mx-1">|</span> {{ p.diseno }}
+                                    <span class="text-silver mx-1">|</span> Col: {{ p.color }}
+                                    <span class="text-silver mx-1">|</span> <span class="text-primary-emphasis fw-bold">Talla: {{ p.talla }}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </td>
+
+                    <td class="text-center">
+                        {% if p.total_stock > 0 %}
+                            <span class="badge rounded-pill bg-success bg-opacity-10 text-success border border-success border-opacity-25 px-3 py-2">
+                                <i class="bi bi-boxes me-1"></i> {{ p.total_stock }} uds.
+                            </span>
+                        {% else %}
+                            <span class="badge rounded-pill bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25 px-3 py-2 pulse-stock">
+                                <i class="bi bi-exclamation-triangle me-1"></i> Sin Stock
+                            </span>
+                        {% endif %}
+                    </td>
+
+                    <td class="text-center">
+                        <span class="badge rounded-pill bg-white text-secondary border px-3 py-2 fw-medium">
+                            {{ p.categoria.nombre }}
+                        </span>
+                    </td>
+
+                    <td class="text-end">
+                        <div class="d-inline-block text-start">
+                            <div class="small text-muted mb-0" style="font-size: 10px;">COSTO: <span class="text-dark fw-medium">S/ {{ p.costo }}</span></div>
+                            <div class="fw-bold text-success" style="font-size: 1.05rem;">VENTA: S/ {{ p.precio }}</div>
+                        </div>
+                    </td>
+
+                    <td class="text-end pe-4">
+                        <div class="d-flex justify-content-end gap-2">
+                            <div class="btn-group shadow-sm rounded-3">
+                                <a href="{% url 'editar_producto' p.id %}" class="btn btn-white btn-sm border-end" title="Editar datos">
+                                    <i class="bi bi-pencil-square text-primary"></i>
+                                </a>
+                                <a href="{% url 'stock_masivo_producto' p.id %}" class="btn btn-white btn-sm" title="Gestionar Stock">
+                                    <i class="bi bi-box-seam text-warning"></i>
+                                </a>
+                            </div>
+
+                            <a href="{% url 'toggle_producto' p.id %}" 
+                               class="btn {% if p.activo %}btn-outline-danger{% else %}btn-outline-success{% endif %} btn-sm rounded-3 px-2 border-0"
+                               {% if p.activo %}onclick="return confirmarDesactivacion('{{ p.codigo }}')"{% endif %}>
+                                <i class="bi {% if p.activo %}bi-toggle-on fs-5{% else %}bi-toggle-off fs-5{% endif %}"></i>
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+            {% empty %}
+                <tr>
+                    <td colspan="6" class="text-center py-5">
+                        <p class="text-muted">No hay productos que coincidan con la búsqueda.</p>
+                        <a href="{% url 'productos' %}" class="btn btn-link">Ver todos</a>
+                    </td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<style>
+    .avatar-product { width: 42px; height: 42px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; border: 1px solid #f1f5f9; }
+    .estado-dot { width: 12px; height: 12px; border-radius: 50%; display: inline-block; }
+    .bg-success-soft { background-color: #22c55e; box-shadow: 0 0 8px rgba(34, 197, 94, 0.4); }
+    .bg-danger-soft { background-color: #ef4444; box-shadow: 0 0 8px rgba(239, 68, 68, 0.4); }
+    .btn-white { background-color: #fff; border: 1px solid #e2e8f0; }
+    .btn-white:hover { background-color: #f8fafc; }
+    .text-silver { color: #cbd5e1; margin: 0 2px; }
+    .table tbody tr { transition: all 0.2s; }
+    .table tbody tr:hover { background-color: #f8faff !important; }
+    .form-control:focus, .form-select:focus { background-color: #fff !important; box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1) !important; border: 1px solid #4f46e5 !important; }
+
+    @keyframes pulse-red-lite {
+        0% { opacity: 1; }
+        50% { opacity: 0.6; }
+        100% { opacity: 1; }
+    }
+    .pulse-stock {
+        animation: pulse-red-lite 2s infinite ease-in-out;
+    }
+</style>
+
+<script>
+function confirmarDesactivacion(codigo) {
+    return confirm(`¿Estás seguro de desactivar el producto ${codigo}? No aparecerá en las ventas activas.`);
+}
+</script>
+
+{% endblock %}

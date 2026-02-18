@@ -1,0 +1,434 @@
+{% extends 'core/base.html' %}
+
+{% block title %}POS | Sistema LEO{% endblock %}
+
+{% block section_title %}Terminal de Ventas{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-2">
+
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h4 class="fw-bold text-dark mb-0">
+            <i class="bi bi-calculator-fill text-primary me-2"></i>Punto de Venta
+            {% if cambio %}
+                <span class="badge bg-warning text-dark ms-2 fw-bold px-3 py-2" style="border: 1px solid #ffc107;">
+                    <i class="bi bi-arrow-left-right me-1"></i> MODO CAMBIO · Boleta #{{ venta_origen }}
+                </span>
+            {% endif %}
+        </h4>
+        <div id="reloj" class="text-muted small fw-medium"></div>
+    </div>
+
+    <div class="row g-3">
+        <div class="col-lg-8">
+            {% if cambio %}
+            <div class="card border-0 shadow-sm rounded-4 mb-3" style="border-left: 5px solid #ffc107 !important;">
+                <div class="card-body p-3">
+                    <h6 class="fw-bold text-dark mb-3"><i class="bi bi-box-arrow-in-left me-2"></i>¿Qué productos devuelve el cliente?</h6>
+                    <div class="table-responsive">
+                        <table class="table table-sm align-middle mb-0">
+                            <thead class="bg-light">
+                                <tr class="extra-small fw-bold text-muted">
+                                    <th>PRODUCTO ORIGINAL</th>
+                                    <th class="text-center">PRECIO</th>
+                                    <th class="text-center">COMPRADO</th>
+                                    <th class="text-center">DEVOLVER</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for p in productos_cambio %}
+                                <tr>
+                                    <td class="small fw-bold">{{ p.nombre }}</td>
+                                    <td class="text-center small">S/ {{ p.precio|stringformat:".2f" }}</td>
+                                    <td class="text-center small">{{ p.cantidad }}</td>
+                                    <td class="text-center" style="width: 140px;">
+                                        <div class="input-group input-group-sm shadow-sm border rounded-2 overflow-hidden">
+                                            <button class="btn btn-light border-0 px-2" type="button" 
+                                                    onclick="ajustarDevolucion(this, -1)">
+                                                <i class="bi bi-dash"></i>
+                                            </button>
+                                            <input type="number" 
+                                                   class="form-control border-0 text-center fw-bold input-return" 
+                                                   value="0" min="0" max="{{ p.cantidad }}" readonly
+                                                   data-id="{{ p.detalle_id }}" 
+                                                   data-precio="{{ p.precio }}"
+                                                   style="background-color: transparent; width: 45px;">
+                                            <button class="btn btn-light border-0 px-2" type="button" 
+                                                    onclick="ajustarDevolucion(this, 1)">
+                                                <i class="bi bi-plus"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <div class="card border-0 shadow-sm rounded-4 h-100">
+                <div class="card-body p-4">
+                    <div class="search-container mb-4">
+                        <label class="form-label small fw-bold text-muted text-uppercase">Escanear o Filtrar Producto</label>
+                        <div class="input-group input-group-lg shadow-sm rounded-3 overflow-hidden border mb-3">
+                            <span class="input-group-text bg-white border-0"><i class="bi bi-barcode-scan text-primary"></i></span>
+                            <input type="text" id="buscarProducto" class="form-control border-0 ps-2 fs-5" 
+                                   placeholder="Escanee código o use los filtros..." autofocus>
+                        </div>
+
+                        <div class="row g-2 p-3 bg-light rounded-3 border">
+                            <div class="col-md-3">
+                                <select id="f-categoria" class="form-select form-select-sm border-0 shadow-none">
+                                    <option value="">Categoría...</option>
+                                    {% for cat in categorias %}
+                                        <option value="{{ cat.id }}">{{ cat.nombre }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <input type="text" id="f-diseno" class="form-control form-control-sm border-0 shadow-none" placeholder="Diseño">
+                            </div>
+                            <div class="col-md-2">
+                                <input type="text" id="f-color" class="form-control form-control-sm border-0 shadow-none" placeholder="Color">
+                            </div>
+                            <div class="col-md-2">
+                                <input type="text" id="f-talla" class="form-control form-control-sm border-0 shadow-none" placeholder="Talla">
+                            </div>
+                            <div class="col-md-3">
+                                <button type="button" onclick="filtrarProductosPOS()" class="btn btn-primary btn-sm w-100 fw-bold">
+                                    <i class="bi bi-funnel-fill"></i> FILTRAR
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="resultadosFiltrados" class="mb-4 d-none">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <h6 class="fw-bold mb-0 text-primary small">COINCIDENCIAS:</h6>
+                            <button class="btn btn-sm text-muted" onclick="cerrarResultados()"><i class="bi bi-x-lg"></i></button>
+                        </div>
+                        <div class="table-responsive border rounded-3 bg-white" style="max-height: 200px;">
+                            <table class="table table-sm table-hover mb-0">
+                                <thead class="bg-light sticky-top">
+                                    <tr class="extra-small fw-bold text-muted">
+                                        <th class="ps-3">PRODUCTO</th>
+                                        <th>COLOR/TALLA</th>
+                                        <th class="text-center">STOCK</th>
+                                        <th class="text-end pe-3">ACCIÓN</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="listaBusqueda" class="small"></tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="table-responsive" style="min-height: 400px;">
+                        <table class="table align-middle">
+                            <thead class="bg-light">
+                                <tr class="text-uppercase text-muted extra-small fw-bold">
+                                    <th class="ps-3 py-3">Nueva Mercadería (Lo que se lleva)</th>
+                                    <th style="width:140px;">Precio</th>
+                                    <th style="width:110px;" class="text-center">Cant.</th>
+                                    <th style="width:120px;" class="text-end">Subtotal</th>
+                                    <th style="width:60px;"></th>
+                                </tr>
+                            </thead>
+                            <tbody id="tablaVenta"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-lg rounded-4 overflow-hidden bg-white h-100">
+                <div class="card-header bg-dark py-3 px-4">
+                    <h6 class="text-white mb-0 fw-bold">
+                        {% if cambio %}LIQUIDACIÓN DE CAMBIO{% else %}RESUMEN DE VENTA{% endif %}
+                    </h6>
+                </div>
+                
+                <div class="card-body p-4">
+                    <div class="mb-4 p-3 rounded-3 border border-primary-subtle" style="background-color: #f0f7ff;">
+                        <label class="form-label extra-small fw-bold text-primary text-uppercase mb-1">Tienda de Despacho</label>
+                        <div class="d-flex align-items-center">
+                            <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 35px; height: 35px;">
+                                <i class="bi bi-shop"></i>
+                            </div>
+                            <div>
+                                <span class="fw-bold d-block text-dark">{{ request.user.perfil.ubicacion.nombre }}</span>
+                                <input type="hidden" id="ubicacion" value="{{ request.user.perfil.ubicacion.id }}">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="totals-box bg-light rounded-4 p-3 mb-4 border border-2">
+                        {% if cambio %}
+                            <div class="d-flex justify-content-between mb-2">
+                                <span class="text-muted fw-medium">Saldo a Favor (Devuelto)</span>
+                                <span class="text-success fw-bold" id="saldo-favor">- S/ 0.00</span>
+                            </div>
+                            <div class="d-flex justify-content-between mb-2">
+                                <span class="text-muted fw-medium">Nueva Mercadería</span>
+                                <span class="text-dark fw-bold" id="total-calc">S/ 0.00</span>
+                            </div>
+                            <hr class="my-3">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <span class="h6 mb-0 fw-bold text-dark d-block">DIFERENCIA</span>
+                                    <small id="label-diferencia" class="text-muted">Seleccione devolución</small>
+                                </div>
+                                <span class="h3 mb-0 fw-bold text-primary" id="total">S/ 0.00</span>
+                            </div>
+                        {% else %}
+                            <div class="d-flex justify-content-between mb-2">
+                                <span class="text-muted fw-medium">Suma Subtotal</span>
+                                <span class="text-dark fw-bold" id="total-calc">S/ 0.00</span>
+                            </div>
+                            <hr class="my-3">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span class="h5 mb-0 fw-bold text-dark">TOTAL</span>
+                                <span class="h3 mb-0 fw-bold text-primary" id="total">S/ 0.00</span>
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label small fw-bold text-muted mb-3">MÉTODO DE PAGO (Para la diferencia)</label>
+                        <select id="metodoPago" class="form-select form-select-lg border-primary-subtle fw-bold">
+                            <option value="EFECTIVO">💵 Efectivo</option>
+                            <option value="YAPE">📱 Yape / Plin</option>
+                            <option value="TARJETA">💳 Tarjeta</option>
+                            <option value="TRANSFERENCIA">🏦 Transferencia</option>
+                        </select>
+                    </div>
+
+                    <button id="btnFinalizar" class="btn btn-success w-100 py-3 rounded-3 fw-bold fs-5 shadow-sm">
+                        {% if cambio %}CONFIRMAR CAMBIO{% else %}FINALIZAR VENTA{% endif %}
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<script>
+let carrito = {};
+const esModoCambio = "{{ cambio|yesno:'true,false' }}" === "true";
+const ventaOrigenId = "{{ venta_origen }}"; 
+const miUbicacionId = document.getElementById('ubicacion').value;
+const URL_BASE = window.location.pathname.includes('/gestion/ventas/') ? '/gestion/ventas' : '/ventas';
+
+// --- LÓGICA DE DEVOLUCIÓN PARCIAL ---
+function ajustarDevolucion(btn, delta) {
+    const container = btn.closest('.input-group');
+    const input = container.querySelector('.input-return');
+    let actual = parseInt(input.value);
+    const max = parseInt(input.getAttribute('max'));
+    let nuevo = actual + delta;
+
+    if (nuevo >= 0 && nuevo <= max) {
+        input.value = nuevo;
+        if (nuevo > 0) {
+            container.classList.add('border-warning');
+            container.classList.remove('border-light');
+        } else {
+            container.classList.remove('border-warning');
+        }
+        calcularTotales();
+    }
+}
+
+// --- FILTRADO Y BÚSQUEDA ---
+async function filtrarProductosPOS() {
+    const contenedor = document.getElementById('resultadosFiltrados');
+    const tbody = document.getElementById('listaBusqueda');
+    const params = new URLSearchParams({
+        categoria: document.getElementById('f-categoria').value,
+        diseno: document.getElementById('f-diseno').value,
+        color: document.getElementById('f-color').value,
+        talla: document.getElementById('f-talla').value
+    });
+    tbody.innerHTML = '<tr><td colspan="4" class="text-center py-3">Buscando...</td></tr>';
+    contenedor.classList.remove('d-none');
+    try {
+        const response = await fetch(`${URL_BASE}/buscar-producto/?${params.toString()}`);
+        const data = await response.json();
+        tbody.innerHTML = '';
+        if (Array.isArray(data) && data.length > 0) {
+            data.forEach(p => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `<td class="ps-3"><span class="fw-bold">${p.codigo}</span><br><small>${p.diseno}</small></td>
+                    <td>${p.color} / ${p.talla}</td><td class="text-center fw-bold">${p.stocks[0]}</td>
+                    <td class="text-end pe-3"><button class="btn btn-sm btn-primary rounded-pill px-3" onclick="buscarProducto('${p.codigo}'); cerrarResultados();"><i class="bi bi-plus"></i></button></td>`;
+                tbody.appendChild(tr);
+            });
+        } else { tbody.innerHTML = '<tr><td colspan="4" class="text-center py-3">No hay resultados.</td></tr>'; }
+    } catch (e) { tbody.innerHTML = '<tr><td colspan="4" class="text-center py-3 text-danger">Error de servidor.</td></tr>'; }
+}
+
+function cerrarResultados() { document.getElementById('resultadosFiltrados').classList.add('d-none'); }
+
+document.getElementById('buscarProducto').addEventListener('keydown', e => {
+    if (e.key === 'Enter') {
+        const codigo = e.target.value.trim();
+        if(codigo) buscarProducto(codigo);
+        e.target.value = '';
+    }
+});
+
+function buscarProducto(codigo) {
+    fetch(`${URL_BASE}/buscar-producto/?codigo=${codigo}`)
+        .then(r => r.json())
+        .then(d => {
+            if(d.success) agregarProducto(d.producto);
+            else Swal.fire('Atención', d.message, 'warning');
+        });
+}
+
+// --- MANEJO DEL CARRITO ---
+function agregarProducto(p, cantInicial = 1) {
+    if (carrito[p.id]) { carrito[p.id].cantidad += cantInicial; actualizarFila(p.id); calcularTotales(); return; }
+    carrito[p.id] = { id: p.id, nombre: p.nombre, precio: parseFloat(p.precio), cantidad: cantInicial };
+    const tr = document.createElement('tr');
+    tr.id = `producto-${p.id}`;
+    tr.innerHTML = `<td class="ps-3 py-3"><div class="fw-bold text-dark">${p.nombre}</div></td>
+        <td><input type="number" step="0.1" value="${p.precio}" class="form-control form-control-sm" onchange="cambiarPrecio(${p.id}, this.value)"></td>
+        <td><input type="number" value="${carrito[p.id].cantidad}" class="form-control form-control-sm text-center" onchange="cambiarCantidad(${p.id}, this.value)"></td>
+        <td class="text-end fw-bold" id="subtotal-${p.id}">S/ ${(p.precio * cantInicial).toFixed(2)}</td>
+        <td class="text-end"><button class="btn btn-sm text-danger" onclick="eliminarProducto(${p.id})"><i class="bi bi-trash"></i></button></td>`;
+    document.getElementById('tablaVenta').appendChild(tr);
+    calcularTotales();
+}
+
+function actualizarFila(id) {
+    const p = carrito[id];
+    const tr = document.getElementById(`producto-${id}`);
+    if(tr) {
+        tr.querySelector('input[type="number"].text-center').value = p.cantidad;
+        document.getElementById(`subtotal-${id}`).innerText = `S/ ${(p.precio * p.cantidad).toFixed(2)}`;
+    }
+}
+
+function cambiarCantidad(id, v) { carrito[id].cantidad = parseInt(v) || 1; actualizarFila(id); calcularTotales(); }
+function cambiarPrecio(id, v) { carrito[id].precio = parseFloat(v) || 0; actualizarFila(id); calcularTotales(); }
+function eliminarProducto(id) { delete carrito[id]; document.getElementById(`producto-${id}`).remove(); calcularTotales(); }
+
+// --- CÁLCULO DE TOTALES ---
+function calcularTotales() {
+    let nuevoTotal = 0;
+    Object.values(carrito).forEach(p => { nuevoTotal += p.precio * p.cantidad; });
+    document.getElementById('total-calc').innerText = `S/ ${nuevoTotal.toFixed(2)}`;
+
+    if (esModoCambio) {
+        let saldoFavor = 0;
+        document.querySelectorAll('.input-return').forEach(input => {
+            saldoFavor += parseFloat(input.dataset.precio) * parseInt(input.value);
+        });
+        
+        document.getElementById('saldo-favor').innerText = `- S/ ${saldoFavor.toFixed(2)}`;
+        
+        const diferencia = nuevoTotal - saldoFavor;
+        const totalEl = document.getElementById('total');
+        const labelDif = document.getElementById('label-diferencia');
+
+        if (diferencia > 0) {
+            labelDif.innerText = "A cobrar al cliente";
+            labelDif.className = "text-danger fw-bold small";
+            totalEl.innerText = `S/ ${diferencia.toFixed(2)}`;
+            totalEl.className = "h3 mb-0 fw-bold text-danger";
+        } else if (diferencia < 0) {
+            labelDif.innerText = "Saldo a favor cliente";
+            labelDif.className = "text-success fw-bold small";
+            totalEl.innerText = `S/ ${Math.abs(diferencia).toFixed(2)}`;
+            totalEl.className = "h3 mb-0 fw-bold text-success";
+        } else {
+            labelDif.innerText = "Cambio mano a mano";
+            labelDif.className = "text-muted small";
+            totalEl.innerText = `S/ 0.00`;
+            totalEl.className = "h3 mb-0 fw-bold text-primary";
+        }
+    } else {
+        document.getElementById('total').innerText = `S/ ${nuevoTotal.toFixed(2)}`;
+    }
+}
+
+// --- FINALIZACIÓN ---
+document.getElementById('btnFinalizar').onclick = () => {
+    if (Object.keys(carrito).length === 0) return Swal.fire('Atención', 'El carrito está vacío', 'warning');
+    
+    let montoAPagar = 0;
+    const nuevoTotal = Object.values(carrito).reduce((acc, p) => acc + (p.precio * p.cantidad), 0);
+    const devoluciones = [];
+
+    if (esModoCambio) {
+        let saldoFavor = 0;
+        document.querySelectorAll('.input-return').forEach(input => {
+            let cant = parseInt(input.value);
+            if (cant > 0) {
+                saldoFavor += parseFloat(input.dataset.precio) * cant;
+                devoluciones.push({ detalle_id: parseInt(input.dataset.id), cantidad: cant });
+            }
+        });
+
+        if (devoluciones.length === 0) {
+            return Swal.fire('Atención', 'Seleccione al menos una unidad para devolver.', 'warning');
+        }
+        montoAPagar = Math.max(0, nuevoTotal - saldoFavor);
+    } else {
+        montoAPagar = nuevoTotal;
+    }
+
+    Swal.fire({
+        title: esModoCambio ? '¿Confirmar Cambio?' : '¿Finalizar Venta?',
+        html: `Monto final a cobrar: <strong>S/ ${montoAPagar.toFixed(2)}</strong>`,
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#198754',
+        confirmButtonText: 'Sí, procesar',
+        cancelButtonText: 'Cancelar'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            Swal.fire({ title: 'Procesando...', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); } });
+
+            const data = {
+                productos: Object.values(carrito),
+                pagos: [{ metodo: document.getElementById('metodoPago').value, monto: montoAPagar }],
+                ubicacion_id: miUbicacionId,
+                venta_origen: esModoCambio ? ventaOrigenId : null,
+                devoluciones: devoluciones 
+            };
+
+            fetch(`${URL_BASE}/finalizar/`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token }}' },
+                body: JSON.stringify(data)
+            })
+            .then(r => r.json())
+            .then(d => {
+                if(d.success) {
+                    Swal.fire({ icon: 'success', title: '¡Operación Exitosa!', showConfirmButton: false, timer: 1500 })
+                    .then(() => { window.location.href = `${URL_BASE}/boleta/${d.venta_id}/`; });
+                } else { Swal.fire('Error', d.message, 'error'); }
+            });
+        }
+    });
+};
+
+setInterval(() => { document.getElementById('reloj').innerText = new Date().toLocaleString(); }, 1000);
+document.getElementById('f-categoria').addEventListener('change', () => filtrarProductosPOS());
+</script>
+
+<style>
+    .extra-small { font-size: 0.75rem; }
+    .bg-light { background-color: #f8f9fa !important; }
+    .rounded-4 { border-radius: 1rem !important; }
+    #listaBusqueda tr { cursor: pointer; transition: 0.2s; }
+    #listaBusqueda tr:hover { background-color: #e9ecef; }
+    .input-return::-webkit-inner-spin-button, .input-return::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+</style>
+{% endblock %}

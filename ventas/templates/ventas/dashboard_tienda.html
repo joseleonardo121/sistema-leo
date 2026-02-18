@@ -1,0 +1,83 @@
+{% extends "core/base.html" %}
+{% block title %}Panel Ventas{% endblock %}
+
+{% block content %}
+
+<div class="container-fluid">
+
+    <h4 class="mb-3">
+        📊 Ventas del Día — {{ ubicacion.nombre }}
+    </h4>
+
+    <div class="row mb-4">
+
+        <div class="col-md-4">
+            <div class="card shadow-sm border-0">
+                <div class="card-body text-center">
+                    <small class="text-muted">Total vendido</small>
+                    <h3 class="text-success">S/ {{ total }}</h3>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card shadow-sm border-0">
+                <div class="card-body text-center">
+                    <small class="text-muted">Ventas</small>
+                    <h3>{{ cantidad }}</h3>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card shadow-sm border-0">
+                <div class="card-body text-center">
+                    <small class="text-muted">Tienda</small>
+                    <h3>{{ ubicacion.nombre }}</h3>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <div class="card shadow-sm border-0">
+        <div class="card-header">
+            🧾 Últimas ventas
+        </div>
+
+        <table class="table table-hover mb-0">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Hora</th>
+                    <th>Total</th>
+                    <th>Ver</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for v in ventas %}
+                <tr>
+                    <td>{{ v.id }}</td>
+                    <td>{{ v.fecha|time:"H:i" }}</td>
+                    <td>S/ {{ v.total }}</td>
+                    <td>
+                        <a href="{% url 'boleta_venta' v.id %}"
+                           class="btn btn-sm btn-outline-primary">
+                            <i class="bi bi-eye"></i>
+                        </a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="4" class="text-center text-muted">
+                        Sin ventas hoy
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+</div>
+
+{% endblock %}

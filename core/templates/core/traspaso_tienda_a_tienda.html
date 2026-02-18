@@ -1,0 +1,237 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Traspaso entre Tiendas | Sistema LEO{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-3">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h4 class="fw-bold text-dark mb-1">
+                <i class="bi bi-arrow-left-right text-primary me-2"></i>Traspaso Tienda → Tienda
+            </h4>
+            <p class="text-muted small mb-0">Mueva stock entre sucursales de forma segura.</p>
+        </div>
+
+        {% if request.user.is_superuser %}
+            <a href="{% url 'historial_traspasos' %}" class="btn btn-outline-dark btn-sm rounded-3">
+                <i class="bi bi-archive me-1"></i> Ver Historial
+            </a>
+        {% endif %}
+    </div>
+
+    <div class="card border-0 shadow-sm rounded-4 mb-4">
+        <div class="card-body p-4">
+            <div class="row g-3">
+                <div class="col-md-3 border-end">
+                    <label class="form-label small fw-bold text-muted text-uppercase">Ruta de Envío</label>
+                    <select id="select-origen" class="form-select border-0 bg-light mb-2 py-2 fw-bold text-primary">
+                        <option value="">Origen...</option>
+                        {% for tienda in tiendas %}
+                            <option value="{{ tienda.id }}">{{ tienda.nombre }}</option>
+                        {% endfor %}
+                    </select>
+                    <select id="select-destino" class="form-select border-0 bg-light py-2">
+                        <option value="">Destino...</option>
+                        {% for tienda in tiendas %}
+                            <option value="{{ tienda.id }}">{{ tienda.nombre }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="col-md-9">
+                    <label class="form-label small fw-bold text-muted text-uppercase">Filtrar Productos</label>
+                    <div class="row g-2">
+                        <div class="col-md-3">
+                            <input type="text" id="f-codigo" class="form-control form-control-sm border-0 bg-light" placeholder="Código">
+                        </div>
+                        <div class="col-md-3">
+                            <select id="f-categoria" class="form-select form-select-sm border-0 bg-light">
+                                <option value="">Todas las Categorías</option>
+                                {% for cat in categorias %}
+                                    <option value="{{ cat.id }}">{{ cat.nombre }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <input type="text" id="f-diseno" class="form-control form-control-sm border-0 bg-light" placeholder="Diseño">
+                        </div>
+                        <div class="col-md-3">
+                            <input type="text" id="f-color" class="form-control form-control-sm border-0 bg-light" placeholder="Color">
+                        </div>
+                        <div class="col-md-3">
+                            <input type="text" id="f-talla" class="form-control form-control-sm border-0 bg-light" placeholder="Talla">
+                        </div>
+                        <div class="col-md-3">
+                            <input type="text" id="f-marca" class="form-control form-control-sm border-0 bg-light" placeholder="Marca">
+                        </div>
+                        <div class="col-md-6">
+                            <button type="button" onclick="ejecutarBusqueda()" class="btn btn-primary btn-sm w-100 fw-bold">
+                                <i class="bi bi-search me-1"></i> BUSCAR PRODUCTOS
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <form id="form-traspaso" method="post">
+        {% csrf_token %}
+        <input type="hidden" name="origen" id="form-origen">
+        <input type="hidden" name="destino" id="form-destino">
+
+        <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+            <div class="table-responsive" style="min-height: 300px;">
+                <table class="table table-hover align-middle mb-0" id="tabla-resultados">
+                    <thead class="bg-light">
+                        <tr class="text-uppercase text-muted extra-small fw-bold">
+                            <th class="ps-4 py-3">Código / Diseño</th>
+                            <th>Color</th>
+                            <th class="text-center">Talla</th>
+                            <th>Marca</th>
+                            {% for tienda in tiendas %}
+                                <th class="text-center">{{ tienda.nombre|slice:":3"|upper }}</th>
+                            {% endfor %}
+                            <th class="pe-4 text-end" style="width: 140px;">Enviar</th>
+                        </tr>
+                    </thead>
+                    <tbody class="border-top-0">
+                        <tr>
+                            <td colspan="{{ tiendas|length|add:5 }}" class="text-center py-5 text-muted">
+                                <i class="bi bi-box-seam fs-2 d-block mb-2 opacity-25"></i>
+                                Seleccione origen y use los filtros para empezar...
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            
+            <div class="card-footer bg-white border-top p-4 text-end">
+                <button type="submit" class="btn btn-success btn-lg px-5 rounded-3 shadow-sm fw-bold">
+                    <i class="bi bi-arrow-repeat me-2"></i> Procesar Traspaso
+                </button>
+            </div>
+        </div>
+    </form>
+</div>
+
+<script>
+async function ejecutarBusqueda() {
+    const tabla = document.getElementById('tabla-resultados').querySelector('tbody');
+    const origenId = document.getElementById('select-origen').value;
+
+    if (!origenId) {
+        Swal.fire('Atención', 'Seleccione una tienda origen primero.', 'warning');
+        return;
+    }
+
+    const params = new URLSearchParams({
+        origen: origenId,
+        codigo: document.getElementById('f-codigo').value,
+        categoria: document.getElementById('f-categoria').value,
+        diseno: document.getElementById('f-diseno').value,
+        color: document.getElementById('f-color').value,
+        talla: document.getElementById('f-talla').value,
+        marca: document.getElementById('f-marca').value,
+    });
+
+    tabla.innerHTML = '<tr><td colspan="100%" class="text-center py-5">Buscando productos...</td></tr>';
+
+    try {
+        const response = await fetch("{% url 'buscar_producto_ajax' %}?" + params.toString());
+        
+        if (!response.ok) throw new Error(`Error HTTP: ${response.status}`);
+        
+        const productos = await response.json();
+        tabla.innerHTML = '';
+
+        if (productos.length === 0) {
+            tabla.innerHTML = '<tr><td colspan="100%" class="text-center py-5 text-muted">No se encontraron productos con stock en esa tienda.</td></tr>';
+            return;
+        }
+
+        productos.forEach(p => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td class="ps-4">
+                    <span class="fw-bold text-dark d-block">${p.codigo}</span>
+                    <small class="text-muted">${p.diseno}</small>
+                </td>
+                <td>${p.color}</td>
+                <td class="text-center"><span class="badge bg-light text-dark border">${p.talla}</span></td>
+                <td>${p.marca}</td>
+                ${p.stocks.map(c => `<td class="text-center fw-medium ${c > 0 ? 'text-dark' : 'text-muted opacity-50'}">${c}</td>`).join('')}
+                <td class="pe-4"><input type="number" name="cantidad_${p.id}" min="0" value="0" class="form-control form-control-sm ms-auto input-cantidad" style="width: 80px;"></td>
+            `;
+            tabla.appendChild(tr);
+        });
+    } catch (error) {
+        console.error("Error en la búsqueda:", error);
+        tabla.innerHTML = `<tr><td colspan="100%" class="text-center py-5 text-danger">Error de servidor.</td></tr>`;
+    }
+}
+
+// --- LÓGICA DE CONFIRMACIÓN DE TRASPASO ---
+document.getElementById('form-traspaso').onsubmit = function(e) {
+    e.preventDefault();
+    const origenId = document.getElementById('select-origen').value;
+    const destinoId = document.getElementById('select-destino').value;
+    
+    // Validar Tiendas
+    if (!origenId || !destinoId) {
+        return Swal.fire('Error', 'Debe seleccionar tienda de Origen y Destino', 'error');
+    }
+    if (origenId === destinoId) {
+        return Swal.fire('Error', 'La tienda de destino no puede ser la misma que el origen', 'error');
+    }
+
+    // Validar que haya al menos una cantidad mayor a 0
+    let tieneCantidades = false;
+    document.querySelectorAll('.input-cantidad').forEach(input => {
+        if (parseInt(input.value) > 0) tieneCantidades = true;
+    });
+
+    if (!tieneCantidades) {
+        return Swal.fire('Atención', 'No ha ingresado ninguna cantidad para traspasar', 'warning');
+    }
+
+    // Alerta de Confirmación Profesional
+    Swal.fire({
+        title: '¿Confirmar Traspaso?',
+        text: "El stock se moverá de forma inmediata entre sucursales.",
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#198754',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'Sí, procesar envío',
+        cancelButtonText: 'Cancelar',
+        reverseButtons: true
+    }).then((result) => {
+        if (result.isConfirmed) {
+            Swal.fire({
+                title: 'Procesando...',
+                text: 'Actualizando inventarios',
+                allowOutsideClick: false,
+                didOpen: () => { Swal.showLoading(); }
+            });
+            this.submit(); // Enviar el formulario
+        }
+    });
+};
+
+document.addEventListener('DOMContentLoaded', () => {
+    const selectOrigen = document.getElementById('select-origen');
+    const selectDestino = document.getElementById('select-destino');
+    const formOrigen = document.getElementById('form-origen');
+    const formDestino = document.getElementById('form-destino');
+
+    if(selectOrigen) selectOrigen.addEventListener('change', e => formOrigen.value = e.target.value);
+    if(selectDestino) selectDestino.addEventListener('change', e => formDestino.value = e.target.value);
+
+    document.querySelectorAll('.card-body input, .card-body select').forEach(el => {
+        el.addEventListener('keypress', (e) => { if (e.key === 'Enter') ejecutarBusqueda(); });
+    });
+});
+</script>
+{% endblock %}

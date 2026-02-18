@@ -1,0 +1,67 @@
+<div class="card shadow-sm">
+    <div class="card-body p-0">
+        <table class="table table-hover table-sm mb-0 align-middle">
+            <thead class="table-light">
+                <tr>
+                    <th>Código</th>
+                    <th>Categoría</th>
+                    <th>Marca</th>
+                    <th>Diseño</th>
+                    <th>Color</th>
+                    <th>Talla</th>
+                    <th>Costo</th>
+                    <th>Precio</th>
+                    <th>Estado</th>
+                    <th class="text-center">Acciones</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                {% for p in productos %}
+                <tr class="{% if not p.activo %}table-secondary{% endif %}">
+                    <td>{{ p.codigo }}</td>
+                    <td>{{ p.categoria.nombre }}</td>
+                    <td>{{ p.marca }}</td>
+                    <td>{{ p.diseno }}</td>
+                    <td>{{ p.color }}</td>
+                    <td>{{ p.talla }}</td>
+                    <td>S/ {{ p.costo }}</td>
+                    <td>S/ {{ p.precio }}</td>
+                    <td class="text-center">
+                        {% if p.activo %}
+                            <span class="badge"
+                                  style="background:#d1fae5; color:#065f46;">
+                                ✔ Activo
+                            </span>
+                        {% else %}
+                            <span class="badge"
+                                  style="background:#fee2e2; color:#991b1b;">
+                                ⛔ Inactivo
+                            </span>
+                        {% endif %}
+                    </td>
+                    <td class="text-center">
+                        <a href="{% url 'stock_masivo_producto' p.id %}"
+                           class="btn btn-sm btn-outline-primary"
+                           title="Stock">
+                            📦
+                        </a>
+
+                        <a href="{% url 'toggle_producto' p.id %}"
+                           class="btn btn-sm {% if p.activo %}btn-outline-danger{% else %}btn-outline-success{% endif %}"
+                           title="{% if p.activo %}Desactivar{% else %}Activar{% endif %}">
+                            {% if p.activo %}⛔{% else %}✔{% endif %}
+                        </a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="10" class="text-center text-muted py-4">
+                        No hay productos
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>

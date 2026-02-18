@@ -1,0 +1,309 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ config.nombre_tienda|default:"Catálogo Deportivo | Sistema LEO" }}</title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=Oswald:wght@500;700;800&display=swap" rel="stylesheet">
+    
+    <style>
+        :root { --p-color: {{ config.color_primario|default:"#000000" }}; }
+        body { font-family: 'Inter', sans-serif; background-color: #fcfcfc; color: #1a1a1a; overflow-x: hidden; }
+        
+        /* --- NAVBAR PREMIUM --- */
+        .navbar {
+            background: rgba(255, 255, 255, 0.8) !important;
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+            padding: 15px 0;
+            transition: all 0.4s ease;
+        }
+        .navbar-brand {
+            font-family: 'Oswald', sans-serif;
+            font-weight: 800;
+            font-size: 1.9rem;
+            letter-spacing: -1.5px;
+            color: #000 !important;
+            text-transform: uppercase;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .navbar-brand::after {
+            content: ''; width: 7px; height: 7px; background-color: var(--p-color);
+            border-radius: 50%; display: inline-block;
+        }
+        .nav-link-custom {
+            font-size: 0.75rem; font-weight: 800; text-transform: uppercase;
+            letter-spacing: 1.5px; color: #111 !important; text-decoration: none; transition: 0.3s;
+        }
+
+        /* --- BANNERS CENTRADOS --- */
+        .carousel-item { height: 550px; background-color: #000; }
+        .carousel-item img { width: 100%; height: 100%; object-fit: cover; opacity: 0.6; }
+        
+        .carousel-caption { 
+            top: 50%; 
+            left: 50%; 
+            transform: translate(-50%, -50%); 
+            bottom: auto; 
+            width: 100%;
+            text-align: center !important;
+        }
+        .carousel-caption h1 { 
+            font-family: 'Oswald', sans-serif; 
+            font-size: clamp(2.5rem, 7vw, 5rem); 
+            font-weight: 800; 
+            text-transform: uppercase; 
+            font-style: italic; 
+            line-height: 0.9;
+            letter-spacing: -2px;
+            margin-bottom: 15px;
+        }
+        .carousel-caption p {
+            font-size: 1.2rem;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            font-weight: 600;
+        }
+
+        /* --- BUSCADOR --- */
+        .search-wrapper { position: relative; max-width: 750px; margin: -50px auto 40px; z-index: 100; padding: 0 20px; }
+        .search-container-inner {
+            background: white; border-radius: 100px; padding: 8px;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.15); border: 1px solid #eee;
+            display: flex; align-items: center;
+        }
+        .search-input { border: none !important; padding: 0.8rem 1.5rem 0.8rem 3.5rem; font-size: 1.1rem; width: 100%; border-radius: 100px; outline: none; }
+        .search-icon { position: absolute; left: 2.2rem; color: #000; font-size: 1.4rem; opacity: 0.8; }
+
+        /* --- PRODUCT CARDS --- */
+        .product-card { border: none; background: transparent; transition: all 0.4s ease; }
+        .img-wrapper { 
+            aspect-ratio: 1/1; border-radius: 30px; overflow: hidden; 
+            background: #f1f1f1; position: relative;
+            transition: all 0.5s cubic-bezier(0.165, 0.84, 0.44, 1);
+        }
+        .img-wrapper img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.8s ease; }
+        .badge-sport {
+            position: absolute; top: 20px; left: 20px; background: #000; color: #fff;
+            padding: 6px 14px; font-size: 0.65rem; font-weight: 900; text-transform: uppercase;
+            border-radius: 4px; z-index: 5;
+        }
+        .product-card:hover .img-wrapper { transform: translateY(-15px); box-shadow: 0 30px 60px rgba(0,0,0,0.12); }
+        .product-card:hover img { transform: scale(1.12); }
+        .cat-tag { font-size: 0.65rem; font-weight: 800; color: #aaa; letter-spacing: 1.5px; text-transform: uppercase; }
+        .product-title { font-family: 'Oswald', sans-serif; font-weight: 700; font-size: 1.15rem; color: #000; text-transform: uppercase; margin-top: 10px; }
+        .price-text { font-family: 'Oswald', sans-serif; font-weight: 700; font-size: 1.5rem; color: var(--p-color); }
+
+        .btn-filter {
+            background: #000; color: #fff; padding: 14px 30px; border-radius: 100px;
+            font-weight: 700; font-size: 0.8rem; letter-spacing: 1px; transition: 0.3s; border: none;
+        }
+        .whatsapp-btn {
+            position: fixed; bottom: 30px; right: 30px; background: #25d366;
+            color: white; width: 65px; height: 65px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 32px; box-shadow: 0 15px 35px rgba(37, 211, 102, 0.4); z-index: 1000; text-decoration: none;
+        }
+        footer { background: #fff; padding: 80px 0 40px; border-top: 1px solid #f0f0f0; }
+
+        .info-text {
+            font-size: 0.85rem;
+            color: #666;
+            background: rgba(0, 0, 0, 0.04);
+            display: inline-block;
+            padding: 5px 15px;
+            border-radius: 50px;
+            letter-spacing: 0.3px;
+        }
+        .info-text strong {
+            color: var(--p-color);
+        }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar sticky-top">
+        <div class="container d-flex justify-content-between align-items-center">
+            <div class="d-none d-lg-flex gap-4">
+                <a href="/" class="nav-link-custom">Colecciones</a>
+                <a href="#footer" class="nav-link-custom">Soporte</a>
+            </div>
+            <a class="navbar-brand mx-auto" href="/">
+                {% if config.logo %}
+                    <img src="/media/{{ config.logo }}" alt="Logo" style="height: 48px;">
+                {% else %}
+                    {{ config.nombre_tienda }}
+                {% endif %}
+            </a>
+            <div class="d-flex align-items-center gap-3 gap-md-4">
+                <button class="btn p-0 border-0" data-bs-toggle="offcanvas" data-bs-target="#menuFiltros">
+                    <i class="bi bi-grid-3x3-gap-fill fs-3"></i>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <div id="bannerHome" class="carousel slide carousel-fade" data-bs-ride="carousel">
+        <div class="carousel-inner">
+            {% for banner in banners %}
+            <div class="carousel-item {% if forloop.first %}active{% endif %}" data-bs-interval="6000">
+                {% if banner.imagen %}
+                <img src="/media/{{ banner.imagen }}" alt="{{ banner.titulo }}">
+                {% endif %}
+                <div class="carousel-caption">
+                    <h1 class="text-white">{{ banner.titulo }}</h1>
+                    <p class="text-white-50">{{ banner.subtitulo }}</p>
+                </div>
+            </div>
+            {% empty %}
+            <div class="carousel-item active">
+                <img src="https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=2070" alt="Training">
+                <div class="carousel-caption">
+                    <h1 class="text-white">MÁXIMO RENDIMIENTO</h1>
+                    <p class="text-white-50">EQUIPAMIENTO PROFESIONAL</p>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <main class="container">
+        <div class="search-wrapper">
+            <div class="search-container-inner">
+                <i class="bi bi-search search-icon"></i>
+                <form method="GET" action="/" class="w-100">
+                    <input type="text" name="q" class="search-input" placeholder='Buscar productos...' value="{{ query|default:'' }}">
+                    {% if request.GET.categoria %}<input type="hidden" name="categoria" value="{{ request.GET.categoria }}">{% endif %}
+                </form>
+            </div>
+
+            <div class="text-center mt-3">
+                <p class="info-text">
+                    <i class="bi bi-info-circle me-1"></i> 
+                    Busca en singular para mejores resultados (ej: <strong>"Polo"</strong>)
+                </p>
+            </div>
+        </div>
+
+        <div class="d-flex justify-content-between align-items-center mb-5 px-2 mt-5">
+            <button class="btn-filter shadow-lg" data-bs-toggle="offcanvas" data-bs-target="#menuFiltros">
+                <i class="bi bi-sliders me-2"></i> CATEGORÍAS
+            </button>
+            <span class="text-muted small fw-800 text-uppercase">{{ productos|length }} ITEMS</span>
+        </div>
+
+        <div class="row g-4 mb-5">
+            {% for p in productos %}
+            <div class="col-6 col-md-4 col-lg-3">
+                <div class="product-card">
+                    <div class="img-wrapper shadow-sm">
+                        <span class="badge-sport">Premium</span>
+                        {% if p.imagen %}
+                            <img src="/media/{{ p.imagen }}" alt="{{ p.diseno }}" loading="lazy">
+                        {% endif %}
+                    </div>
+                    <div class="pt-3 px-1 text-center">
+                        <span class="cat-tag">{{ p.categoria.nombre }}</span>
+                        <h6 class="product-title mb-1 text-truncate">{{ p.diseno }}</h6>
+                        <div class="d-flex justify-content-center align-items-center gap-3 mt-2">
+                            <span class="price-text">S/ {{ p.precio }}</span>
+                            
+                            <a href="https://wa.me/{{ config.whatsapp|cut:' ' }}?text=%C2%A1Hola!%20Me%20interesa%20el%20producto%20de%20la%20categor%C3%ADa%20{{ p.categoria.nombre|urlencode }}:%20*{{ p.diseno|urlencode }}*%20en%20color%20{{ p.color|urlencode }}" 
+                               target="_blank" class="btn btn-dark btn-sm rounded-pill px-3 shadow-sm">
+                                <i class="bi bi-whatsapp"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </main>
+
+    <footer id="footer" style="background: #001529; color: white; padding: 80px 0 40px; border-top: 4px solid var(--p-color);">
+        <div class="container">
+            <div class="row g-4 align-items-start">
+                <div class="col-md-3">
+                    <h5 class="fw-800 text-uppercase mb-4" style="font-family: 'Oswald', sans-serif; letter-spacing: -1px; color: #ffffff; line-height: 1.1;">
+                        WELLNESS <br> 
+                        <span style="color: #4dabf7; font-size: 0.9rem; letter-spacing: 1px;">ROPA DEPORTIVA</span>
+                    </h5>
+                    <p style="color: #dee2e6; font-size: 0.85rem; line-height: 1.6;">
+                        Indumentaria de alto rendimiento. Los mejores productos a los mejores precios de Arequipa.
+                    </p>
+                </div>
+
+                <div class="col-md-3">
+                    <h6 class="text-uppercase small fw-bold mb-4" style="letter-spacing: 2px; color: #ffffff; border-bottom: 2px solid #4dabf7; display: inline-block; padding-bottom: 5px;">Tienda Física</h6>
+                    <p class="small mb-2" style="color: #ffffff; font-weight: 700;">AREQUIPA, PERÚ</p>
+                    <p class="small mb-1" style="color: #adb5bd;">Calle Perú 320</p>
+                    <p class="small" style="color: #adb5bd;">Galerías el Rey Int C-5</p>
+                </div>
+
+                <div class="col-md-3">
+                    <h6 class="text-uppercase small fw-bold mb-4" style="letter-spacing: 2px; color: #ffffff; border-bottom: 2px solid #4dabf7; display: inline-block; padding-bottom: 5px;">Atención Directa</h6>
+                    <p class="small mb-2" style="color: #adb5bd;">
+                        <i class="bi bi-whatsapp me-2" style="color: #25d366;"></i> 958 724 664
+                    </p>
+                    <p class="small" style="color: #adb5bd;">
+                        <i class="bi bi-envelope me-2" style="color: #ffffff;"></i> velosportsaqp@gmail.com
+                    </p>
+                </div>
+
+                <div class="col-md-3 text-md-end">
+                    <h6 class="text-uppercase small fw-bold mb-4" style="letter-spacing: 2px; color: #ffffff; border-bottom: 2px solid #4dabf7; display: inline-block; padding-bottom: 5px;">Síguenos</h6>
+                    <div class="d-flex justify-content-center justify-content-md-end gap-3 mb-3">
+                        {% if config.instagram_url %}
+                        <a href="{{ config.instagram_url }}" class="text-white fs-4"><i class="bi bi-instagram"></i></a>
+                        {% endif %}
+                        {% if config.facebook_url %}
+                        <a href="{{ config.facebook_url }}" class="text-white fs-4"><i class="bi bi-facebook"></i></a>
+                        {% endif %}
+                    </div>
+                    <span class="badge bg-primary" style="font-size: 0.6rem; letter-spacing: 1px;">ENVÍOS A TODO EL SUR</span>
+                </div>
+            </div>
+
+            <div class="row mt-5 pt-4" style="border-top: 1px solid rgba(255,255,255,0.1);">
+                <div class="col-12 text-center">
+                    <p style="color: #6c757d; font-size: 0.7rem; letter-spacing: 2px; margin-bottom: 0;">
+                        © 2026 WELLNESS | CALIDAD DESDE AREQUIPA
+                    </p>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <div class="offcanvas offcanvas-end" tabindex="-1" id="menuFiltros">
+        <div class="offcanvas-header border-bottom p-4">
+            <h5 class="offcanvas-title fw-800" style="font-family: 'Oswald', sans-serif; letter-spacing: 1px;">CATEGORÍAS</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas"></button>
+        </div>
+        <div class="offcanvas-body p-0">
+            <div class="list-group list-group-flush">
+                <a href="/" class="list-group-item list-group-item-action py-3 px-4 fw-bold" style="font-size: 0.85rem; letter-spacing: 1px; color: var(--p-color);">
+                    <i class="bi bi-grid-fill me-2"></i> MOSTRAR TODO
+                </a>
+                {% for cat in categorias|dictsort:"nombre" %}
+                <a href="/?categoria={{ cat.id }}" class="list-group-item list-group-item-action py-3 px-4 border-0" style="font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.5px; color: #444;">
+                    <i class="bi bi-chevron-right me-2 small opacity-50"></i> {{ cat.nombre }}
+                </a>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    {% if config.whatsapp %}
+    <a href="https://wa.me/{{ config.whatsapp|cut:' ' }}" class="whatsapp-btn shadow-lg" target="_blank"><i class="bi bi-whatsapp"></i></a>
+    {% endif %}
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

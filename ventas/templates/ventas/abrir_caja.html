@@ -1,0 +1,133 @@
+{% extends 'core/base.html' %}
+{% block title %}Abrir Caja | Sistema LEO{% endblock %}
+
+{% block section_title %}Proceso de Apertura{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+
+    <div class="row justify-content-center">
+        <div class="col-md-6 col-lg-4">
+
+            <div class="card shadow-lg border-0 rounded-4 overflow-hidden">
+                
+                <div class="card-header bg-white border-0 text-center pt-5 pb-3">
+                    <div class="icon-badge bg-success-soft text-success rounded-circle mx-auto mb-3">
+                        <i class="bi bi-safe2 fs-2"></i>
+                    </div>
+                    <h4 class="fw-bold text-dark mb-1">Apertura de Caja</h4>
+                    <p class="text-muted small">Inicie el turno registrando el saldo inicial.</p>
+                </div>
+
+                <div class="card-body px-4 pb-5">
+
+                    {% if error %}
+                        <div class="alert alert-danger border-0 rounded-3 d-flex align-items-center mb-4" role="alert">
+                            <i class="bi bi-exclamation-octagon-fill me-2"></i>
+                            <div class="small">{{ error }}</div>
+                        </div>
+                    {% endif %}
+
+                    <form method="post" class="needs-validation" novalidate>
+                        {% csrf_token %}
+
+                        <div class="mb-4">
+                            <label class="form-label small fw-bold text-uppercase text-muted" style="letter-spacing: 0.5px;">
+                                <i class="bi bi-shop me-1"></i> Punto de Venta
+                            </label>
+                            <select name="ubicacion" class="form-select border-0 bg-light py-3 px-3 shadow-none custom-select" required>
+                                <option value="" selected disabled>Seleccione una tienda...</option>
+                                {% for u in ubicaciones %}
+                                    <option value="{{ u.id }}">{{ u.nombre }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="mb-5 text-center">
+                            <label class="form-label small fw-bold text-uppercase text-muted d-block mb-3" style="letter-spacing: 0.5px;">
+                                <i class="bi bi-cash-stack me-1"></i> Monto Inicial de Efectivo
+                            </label>
+                            <div class="input-group input-group-lg shadow-sm rounded-3 overflow-hidden border">
+                                <span class="input-group-text bg-white border-0 ps-4 fw-bold text-dark">S/</span>
+                                <input type="number" step="0.01" name="monto_apertura"
+                                       class="form-control border-0 ps-0 fw-bold fs-2 text-dark"
+                                       placeholder="0.00" required>
+                            </div>
+                        </div>
+
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-dark btn-lg py-3 rounded-3 shadow-sm fw-bold">
+                                <i class="bi bi-unlock-fill me-2"></i> Confirmar Apertura
+                            </button>
+                        </div>
+
+                        <div class="text-center mt-4">
+                            <a href="{% url 'panel_cajas' %}" class="text-muted small text-decoration-none">
+                                <i class="bi bi-arrow-left me-1"></i> Cancelar y volver
+                            </a>
+                        </div>
+
+                    </form>
+
+                </div>
+
+            </div>
+
+        </div>
+    </div>
+
+</div>
+
+<style>
+    /* Diseño específico para el formulario de apertura */
+    .icon-badge {
+        width: 70px;
+        height: 70px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background-color: #ecfdf5;
+        border: 4px solid #fff;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+    }
+
+    .bg-success-soft { background-color: #ecfdf5; }
+
+    .form-control:focus, .form-select:focus {
+        background-color: #fff !important;
+        box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.08) !important;
+        border-color: #4f46e5 !important;
+    }
+
+    /* Estilo para los campos de entrada grandes */
+    input[type=number]::-webkit-inner-spin-button, 
+    input[type=number]::-webkit-outer-spin-button { 
+        -webkit-appearance: none; 
+        margin: 0; 
+    }
+
+    .custom-select {
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+</style>
+
+<script>
+    // Validación de Bootstrap básica
+    (function () {
+      'use strict'
+      var forms = document.querySelectorAll('.needs-validation')
+      Array.prototype.slice.call(forms)
+        .forEach(function (form) {
+          form.addEventListener('submit', function (event) {
+            if (!form.checkValidity()) {
+              event.preventDefault()
+              event.stopPropagation()
+            }
+            form.classList.add('was-validated')
+          }, false)
+        })
+    })()
+</script>
+
+{% endblock %}

@@ -1,0 +1,171 @@
+{% extends 'core/base.html' %} 
+
+{% block title %}Nuevo Producto{% endblock %} 
+
+{% block content %} 
+
+<div class="d-flex justify-content-between align-items-center mb-4"> 
+    <div> 
+        <h4 class="mb-0 fw-semibold">Nuevo producto</h4> 
+        <small class="text-muted">Registro de un nuevo producto en el sistema</small> 
+    </div> 
+</div> 
+
+<div class="row justify-content-center"> 
+    <div class="col-lg-6 col-md-8"> 
+
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-danger alert-dismissible fade show shadow-sm border-0 mb-3" role="alert">
+                    <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+
+        <form method="post" class="card shadow-sm border-0"> 
+            {% csrf_token %} 
+            <input type="hidden" name="clonar" id="inputClonar" value="false">
+
+            <div class="card-body"> 
+                <h6 class="fw-semibold mb-3 text-uppercase text-secondary small">Información del producto</h6> 
+
+                <div class="mb-3"> 
+                    <label class="form-label small text-muted">Código</label> 
+                    <input name="codigo" class="form-control form-control-sm" required autofocus> 
+                    <small class="text-muted" style="font-size: 0.75rem;">Debe ser un código único.</small>
+                </div> 
+
+                <div class="mb-3"> 
+                    <label class="form-label small text-muted">Categoría</label> 
+                    <div class="input-group input-group-sm"> 
+                        <select name="categoria" id="categoriaSelect" class="form-select"> 
+                            {% for c in categorias %} 
+                                <option value="{{ c.id }}" {% if datos.categoria|stringformat:"s" == c.id|stringformat:"s" %}selected{% endif %}>
+                                    {{ c.nombre }}
+                                </option> 
+                            {% endfor %} 
+                        </select> 
+                        <button type="button" class="btn btn-outline-success" data-bs-toggle="modal" data-bs-target="#modalCategoria"> 
+                            <i class="bi bi-plus-lg"></i> 
+                        </button> 
+                    </div> 
+                </div> 
+
+                <div class="row g-2"> 
+                    <div class="col-md-6"> 
+                        <label class="form-label small text-muted">Marca</label> 
+                        <input name="marca" value="{{ datos.marca|default:'' }}" class="form-control form-control-sm"> 
+                    </div> 
+                    <div class="col-md-6"> 
+                        <label class="form-label small text-muted">Diseño</label> 
+                        <input name="diseno" value="{{ datos.diseno|default:'' }}" class="form-control form-control-sm"> 
+                    </div> 
+                    <div class="col-md-6"> 
+                        <label class="form-label small text-muted">Color</label> 
+                        <input name="color" value="{{ datos.color|default:'' }}" class="form-control form-control-sm"> 
+                    </div> 
+                    <div class="col-md-6"> 
+                        <label class="form-label small text-muted">Talla</label> 
+                        <input name="talla" value="{{ datos.talla|default:'' }}" class="form-control form-control-sm"> 
+                    </div> 
+                </div> 
+
+                <hr class="my-3"> 
+
+                <div class="row g-2"> 
+                    <div class="col-md-6"> 
+                        <label class="form-label small text-muted">Costo</label> 
+                        <input name="costo" value="{{ datos.costo|default:'' }}" class="form-control form-control-sm" type="number" step="0.01"> 
+                    </div> 
+                    <div class="col-md-6"> 
+                        <label class="form-label small text-muted">Precio de venta</label> 
+                        <input name="precio" value="{{ datos.precio|default:'' }}" class="form-control form-control-sm" type="number" step="0.01"> 
+                    </div> 
+                </div> 
+            </div> 
+
+            <div class="card-footer bg-white border-0 d-flex justify-content-between pb-3"> 
+                <button type="button" class="btn btn-outline-primary btn-sm rounded-pill px-3" onclick="confirmarGuardado(true)"> 
+                    <i class="bi bi-copy me-1"></i> Guardar y seguir editando
+                </button> 
+
+                <button type="button" class="btn btn-success btn-sm rounded-pill px-4" onclick="confirmarGuardado(false)"> 
+                    <i class="bi bi-check-lg me-1"></i> Guardar producto 
+                </button> 
+            </div> 
+        </form> 
+    </div> 
+</div> 
+
+<div class="modal fade" id="modalCategoria" tabindex="-1"> 
+    <div class="modal-dialog modal-dialog-centered"> 
+        <div class="modal-content border-0 shadow-sm"> 
+            <div class="modal-header"> 
+                <h6 class="modal-title fw-semibold">Nueva categoría</h6> 
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button> 
+            </div> 
+            <div class="modal-body"> 
+                <label class="form-label small text-muted">Nombre</label> 
+                <input type="text" id="nombreCategoria" class="form-control form-control-sm" placeholder="Ej: Polos deportivos"> 
+            </div> 
+            <div class="modal-footer"> 
+                <button class="btn btn-light btn-sm" data-bs-dismiss="modal">Cancelar</button> 
+                <button class="btn btn-success btn-sm" onclick="crearCategoria()">Guardar</button> 
+            </div> 
+        </div> 
+    </div> 
+</div> 
+
+<script> 
+function confirmarGuardado(clonar) { 
+    document.getElementById('inputClonar').value = clonar;
+    
+    // Validación básica antes de SweetAlert
+    const codigoInput = document.querySelector('input[name="codigo"]');
+    if (!codigoInput.value.trim()) {
+        codigoInput.focus();
+        return;
+    }
+
+    Swal.fire({ 
+        title: clonar ? '¿Guardar y seguir editando?' : '¿Crear producto?', 
+        text: clonar ? 'El producto se guardará y los datos actuales se mantendrán para el siguiente registro.' : 'Verifica que los datos sean correctos.', 
+        icon: 'question', 
+        showCancelButton: true, 
+        confirmButtonColor: '#22c55e', 
+        cancelButtonColor: '#6c757d', 
+        confirmButtonText: 'Sí, guardar', 
+        cancelButtonText: 'Cancelar' 
+    }).then((result) => { 
+        if (result.isConfirmed) { 
+            document.querySelector('form').submit(); 
+        } 
+    }); 
+} 
+
+function crearCategoria() { 
+    const nombre = document.getElementById('nombreCategoria').value; 
+    if (!nombre.trim()) return; 
+
+    fetch("{% url 'crear_categoria_ajax' %}", { 
+        method: "POST", 
+        headers: { 
+            "X-CSRFToken": "{{ csrf_token }}", 
+            "Content-Type": "application/json" 
+        }, 
+        body: JSON.stringify({ nombre }) 
+    }) 
+    .then(res => res.json()) 
+    .then(data => { 
+        const select = document.getElementById("categoriaSelect"); 
+        const option = new Option(data.nombre, data.id, true, true); 
+        select.add(option); 
+        document.getElementById('nombreCategoria').value = ''; 
+        bootstrap.Modal.getInstance(document.getElementById('modalCategoria')).hide(); 
+    }); 
+} 
+</script> 
+
+{% endblock %}

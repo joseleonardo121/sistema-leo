@@ -1,0 +1,164 @@
+{% extends 'core/base.html' %}
+
+{% block content %}
+<div class="container-fluid py-4 d-print-none">
+    <div class="row justify-content-center">
+        <div class="col-md-5">
+            <div class="card shadow border-0">
+                <div class="card-header bg-primary text-white py-3 text-center">
+                    <h5 class="mb-0 fw-bold">IMPRESIÓN HYXC (30x20mm)</h5>
+                </div>
+                <div class="card-body p-4 text-center">
+                    <div class="mb-3 text-start">
+                        <label class="form-label fw-bold small text-uppercase">Código del Producto</label>
+                        <input type="text" id="cod" class="form-control form-control-lg border-2" 
+                               placeholder="Ej: 001122" oninput="actualizarVistaPrevia()" autofocus>
+                    </div>
+
+                    <div class="mb-4 text-start">
+                        <label class="form-label fw-bold small text-uppercase">Cantidad</label>
+                        <input type="number" id="cant" class="form-control border-2" value="1" min="1">
+                    </div>
+
+                    <div class="preview-box p-3 border rounded bg-light mb-4">
+                        <div style="width: 100%; height: 120px; display: flex; align-items: center; justify-content: center; background: #ddd; border-radius: 8px;">
+                            <div style="width: 150px; height: 100px; background: white; display: flex; align-items: center; justify-content: center; border: 1px solid #999;">
+                                <svg id="barcode-preview"></svg>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button onclick="generarImpresion()" class="btn btn-success btn-lg w-100 fw-bold">
+                        IMPRIMIR AHORA
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="print-area"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
+
+<style>
+    /* TRUCO: No usamos display:none. Lo movemos fuera de la pantalla 
+       para que Chrome lo renderice siempre. */
+    #print-area { 
+        position: absolute;
+        left: -9999px;
+        top: 0;
+        visibility: hidden; /* Oculto para el ojo, vivo para el sistema */
+    }
+
+    @media print {
+        @page { 
+            size: 30mm 20mm; 
+            margin: 0 !important; 
+        }
+        
+        /* Ocultar todo menos las etiquetas */
+        body > *:not(#print-area) { display: none !important; }
+        
+        #print-area { 
+            position: static !important;
+            visibility: visible !important;
+            display: block !important;
+            width: 30mm !important;
+        }
+
+        .sticker {
+            width: 30mm !important;
+            height: 20mm !important;
+            display: flex !important;
+            align-items: center !important;    /* CENTRADO VERTICAL */
+            justify-content: center !important; /* CENTRADO HORIZONTAL */
+            page-break-after: always;
+            overflow: hidden;
+            background: white !important;
+        }
+
+        svg {
+            width: 26mm !important;
+            height: auto !important;
+            max-height: 16mm !important;
+        }
+    }
+</style>
+
+<script>
+function actualizarVistaPrevia() {
+    const texto = document.getElementById('cod').value.trim();
+    const previewSvg = document.getElementById('barcode-preview');
+    if (texto) {
+        JsBarcode("#barcode-preview", texto, {
+            format: "CODE128",
+            width: 2,
+            height: 40,
+            displayValue: true,
+            fontSize: 14,
+            margin: 0
+        });
+    } else {
+        previewSvg.innerHTML = "";
+    }
+}
+
+function generarImpresion() {
+    const texto = document.getElementById('cod').value.trim();
+    const cantidad = parseInt(document.getElementById('cant').value);
+    
+    if(!texto) return alert("Ingresa un código");
+
+    // Creamos una ventana oculta para preparar la impresión
+    const ventanaImpresion = window.open('', '_blank', 'width=300,height=200');
+    
+    // Escribimos el HTML mínimo necesario dentro de esa ventana
+    ventanaImpresion.document.write(`
+        <html>
+        <head>
+            <title>Imprimir Etiquetas</title>
+            <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"><\/script>
+            <style>
+                @page { size: 30mm 20mm; margin: 0; }
+                body { margin: 0; padding: 0; }
+                .sticker {
+                    width: 30mm; height: 20mm;
+                    display: flex; align-items: center; justify-content: center;
+                    page-break-after: always;
+                }
+                svg { width: 26mm; height: auto; max-height: 16mm; }
+            </style>
+        </head>
+        <body>
+            <div id="contenedor"></div>
+            <script>
+                const contenedor = document.getElementById('contenedor');
+                for(let i = 0; i < ${cantidad}; i++) {
+                    const div = document.createElement('div');
+                    div.className = 'sticker';
+                    const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+                    div.appendChild(svg);
+                    contenedor.appendChild(div);
+                    JsBarcode(svg, "${texto}", {
+                        format: "CODE128", width: 2, height: 50,
+                        displayValue: true, fontSize: 16, margin: 0
+                    });
+                }
+                // Forzamos a que espere a que todo esté dibujado
+                window.onload = function() {
+                    setTimeout(() => {
+                        window.print();
+                        window.close();
+                    }, 500);
+                };
+            <\/script>
+        </body>
+        </html>
+    `);
+    ventanaImpresion.document.close();
+}
+
+actualizarVistaPrevia();
+</script>
+{% endblock %}

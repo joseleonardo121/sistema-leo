@@ -1,0 +1,208 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Ticket de Venta #{{ venta.id }}</title>
+<script src="https://unpkg.com/qz-tray/qz-tray.js"></script>
+
+<style>
+    body { font-family: 'Courier New', Courier, monospace; background: #e9ecef; margin: 0; padding: 20px 0; }
+    
+    .nav-buttons { width: 80mm; margin: 0 auto 15px auto; display: flex; gap: 10px; }
+    .btn-nav { flex: 1; padding: 12px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; text-decoration: none; text-align: center; font-size: 13px; font-family: sans-serif; transition: 0.3s; }
+    .btn-regresar { background-color: #495057; color: white; }
+    .btn-nueva { background-color: #001529; color: white; }
+
+    .boleta {
+        width: 80mm; background: #fff; padding: 12px; margin: auto;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1); font-size: 13px; line-height: 1.4; color: #000;
+    }
+
+    .center { text-align: center; }
+    .right { text-align: right; }
+    .bold { font-weight: bold; }
+    
+    hr { border: none; border-top: 1px dashed #000; margin: 8px 0; }
+
+    .btn-print {
+        width: 80mm; margin: 12px auto 0; display: block; padding: 15px;
+        font-size: 16px; font-weight: bold; cursor: pointer; border-radius: 10px;
+        border: none; transition: 0.3s;
+    }
+    .btn-main { background-color: #001529; color: white; }
+    .btn-whatsapp { background-color: #25d366; color: white; margin-top: 10px; }
+
+    @media print {
+        .nav-buttons, .btn-print { display: none; }
+        body { background: white; padding: 0; }
+        .boleta { box-shadow: none; margin: 0; width: 100%; }
+    }
+</style>
+</head>
+
+<body>
+
+<div class="nav-buttons">
+    <a href="{% url 'historial_ventas' %}" class="btn-nav btn-regresar">⬅ VOLVER</a>
+    <a href="{% url 'pos' %}" class="btn-nav btn-nueva">➕ NUEVA VENTA</a>
+</div>
+
+<div class="boleta">
+    <div class="center">
+        <span style="font-size: 20px; font-weight: bold;">WELLNESS</span><br>
+        <span style="font-size: 11px; letter-spacing: 1px;">ROPA DEPORTIVA PREMIUM</span><br>
+        <small>Tu propón la meta y nosotros el outfit!</small>
+    </div>
+
+    <br>
+    <div style="font-size: 11px;">
+        <b>📍 Dirección:</b> Calle Perú 320 - Galerías El Rey Int. C-5<br>
+        <b>📱 WhatsApp:</b> 958 724 664<br>
+        <b>📸 Instagram:</b> @wellness_aqp
+    </div>
+
+    <hr>
+    <strong>TICKET DE VENTA: #{{ venta.id }}</strong><br>
+    FECHA: {{ venta.fecha|date:"d/m/Y H:i" }}<br>
+    VENDEDOR: {{ venta.usuario.username|upper }}<br>
+    TIENDA: {{ venta.ubicacion.nombre|upper }}
+    <hr>
+
+    <table style="width: 100%; font-size: 11px; border-collapse: collapse;">
+        <thead>
+            <tr style="border-bottom: 1px solid #000;">
+                <th align="left">DESCRIPCIÓN</th>
+                <th align="center">CANT</th>
+                <th align="right">TOTAL</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for d in venta.detalles.all %}
+            <tr>
+                <td>{{ d.producto.categoria }} {{ d.producto.codigo|truncatechars:5 }}</td>
+                <td align="center">{{ d.cantidad }}</td>
+                <td align="right">S/ {{ d.subtotal }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <hr>
+    <div class="right" style="font-size: 14px;">
+        TOTAL PRODUCTOS: S/ {{ venta.total }}
+    </div>
+
+    <div style="font-size: 11px; margin-top: 8px; border: 1px solid #000; padding: 4px;">
+        <div class="bold center" style="border-bottom: 1px dashed #000; margin-bottom: 4px;">PAGOS RECIBIDOS</div>
+        {% for pago in venta.pagos.all %}
+            <div style="display: flex; justify-content: space-between;">
+                <span>{{ pago.metodo }}:</span>
+                <span class="bold">S/ {{ pago.monto }}</span>
+            </div>
+        {% empty %}
+            <div class="center">Cambio mano a mano (S/ 0.00)</div>
+        {% endfor %}
+    </div>
+
+    <br>
+    <div class="center" style="font-size: 10px;">
+        *** GRACIAS POR TU COMPRA ***<br>
+        Se aceptan cambios (máx. 48h)<br>
+        <strong>NO SE REALIZAN DEVOLUCIONES DE DINERO</strong>
+    </div>
+</div>
+
+<button class="btn-print btn-main" onclick="imprimirBoleta()">
+    🖨 IMPRIMIR TICKET
+</button>
+<button class="btn-print btn-whatsapp" onclick="enviarWhatsApp()">
+    📲 ENVIAR POR WHATSAPP
+</button>
+
+<script>
+async function imprimirBoleta() {
+    try {
+        await qz.websocket.connect();
+        const printer = "STMicroelectronics USB POS Printer"; 
+        const config = qz.configs.create(printer);
+
+        const data = [
+            '\x1B\x40',          // Reiniciar
+            '\x1B\x61\x01',      // Centrar
+            '\x1B\x21\x30',      
+            'WELLNESS\n',
+            '\x1B\x21\x00',      
+            'ROPA DEPORTIVA\n',
+            'Tu propon la meta y nosotros el outfit!\n\n',
+
+            '\x1B\x61\x00',      // Izquierda
+            'Dir: Calle Peru 320 - El Rey C-5\n',
+            'Tel: 958724664\n',
+            '--------------------------------\n',
+            'TICKET: #{{ venta.id }}\n',
+            'FECHA : {{ venta.fecha|date:"d/m/Y H:i" }}\n',
+            'VEND  : {{ venta.usuario.username|upper }}\n',
+            '--------------------------------\n',
+            'DESC.          CANT.    SUBTOTAL\n',
+            '--------------------------------\n',
+
+            {% for d in venta.detalles.all %}
+            '{{ d.producto.categoria|truncatechars:14 }}  {{ d.cantidad }}  S/ {{ d.subtotal }}\n',
+            {% endfor %}
+
+            '--------------------------------\n',
+            '\x1B\x61\x02',      // Derecha
+            'TOTAL PRODUCTOS: S/ {{ venta.total }}\n',
+            '--------------------------------\n',
+            
+            // Sección de pagos en la ticketera
+            'PAGOS:\n',
+            {% for pago in venta.pagos.all %}
+            '{{ pago.metodo }}: S/ {{ pago.monto }}\n',
+            {% endfor %}
+
+            '\n',
+            '\x1B\x61\x01',      // Centro
+            'Se aceptan cambios (48h)\n',
+            'NO DEVOLUCION DE DINERO\n',
+            'Gracias por tu compra!\n',
+            '\n\n\n\n\n',
+            '\x1D\x56\x41\x10'   // Corte
+        ];
+
+        await qz.print(config, data);
+    } catch (e) {
+        alert("Error de impresión: " + e);
+    } finally {
+        await qz.websocket.disconnect();
+    }
+}
+
+function enviarWhatsApp() {
+    const telefono = prompt("Ingrese número de celular (9 dígitos):");
+    if (!telefono || telefono.length !== 9) {
+        alert("Número inválido");
+        return;
+    }
+    
+    // Calculamos el total de pagos reales para el mensaje de WA
+    let montoPagado = 0;
+    {% for pago in venta.pagos.all %}
+        montoPagado += parseFloat("{{ pago.monto }}");
+    {% endfor %}
+
+    let mensaje = `*WELLNESS - Ropa Deportiva*%0A` +
+                  `----------------------------%0A` +
+                  `*Ticket:* #{{ venta.id }}%0A` +
+                  `*Fecha:* {{ venta.fecha|date:"d/m/Y" }}%0A` +
+                  `*Total Prendas:* S/ {{ venta.total }}%0A` +
+                  `*Monto Pagado:* S/ ${montoPagado.toFixed(2)}%0A%0A` +
+                  `Gracias por elegirnos 💪%0A` +
+                  `📍 Calle Perú 320 (El Rey C-5)`;
+    
+    window.open(`https://wa.me/51${telefono}?text=${mensaje}`, '_blank');
+}
+</script>
+</body>
+</html>
