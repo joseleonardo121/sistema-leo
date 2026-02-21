@@ -158,7 +158,9 @@ def productos_inactivos(request):
     })
 
 def editar_producto(request, pk):
-    producto = Producto.objects.get(pk=pk)
+    # Usamos get_object_or_404 para evitar errores si el producto no existe
+    producto = get_object_or_404(Producto, pk=pk)
+    
     if request.method == 'POST':
         producto.codigo = request.POST['codigo']
         producto.categoria_id = request.POST['categoria']
@@ -170,10 +172,20 @@ def editar_producto(request, pk):
         producto.precio = request.POST['precio']
         producto.save()
         return redirect('productos')
-    categorias = Categoria.objects.all()
+
+    # Convertimos los números a texto con PUNTO decimal para que el HTML
+    # siempre los muestre rellenos y no pierdas tiempo escribiéndolos de nuevo.
+    costo_formateado = str(producto.costo).replace(',', '.')
+    precio_formateado = str(producto.precio).replace(',', '.')
+
+    # Ordenamos las categorías de la A a la Z
+    categorias = Categoria.objects.all().order_by('nombre')
+
     return render(request, 'core/editar_producto.html', {
         'producto': producto,
-        'categorias': categorias
+        'categorias': categorias,
+        'costo_formateado': costo_formateado,
+        'precio_formateado': precio_formateado
     })
 
 
