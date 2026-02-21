@@ -194,7 +194,7 @@ def stock(request):
     # Captura de filtros
     codigo = request.GET.get('codigo')
     categoria = request.GET.get('categoria')
-    talla = request.GET.get('talla')  # <--- NUEVO
+    talla = request.GET.get('talla')
     diseno = request.GET.get('diseno')
     color = request.GET.get('color')
     marca = request.GET.get('marca')
@@ -204,8 +204,12 @@ def stock(request):
         productos = productos.filter(codigo__icontains=codigo)
     if categoria:
         productos = productos.filter(categoria_id=categoria)
-    if talla:  # <--- NUEVO
-        productos = productos.filter(talla__icontains=talla)
+    
+    # --- CAMBIO 1: Filtro de talla exacto ---
+    if talla:
+        # Cambiamos __icontains por __iexact para que "L" no traiga "XL"
+        productos = productos.filter(talla__iexact=talla)
+    
     if diseno:
         productos = productos.filter(diseno__icontains=diseno)
     if color:
@@ -230,7 +234,8 @@ def stock(request):
     return render(request, 'core/stock.html', {
         'ubicaciones': ubicaciones,
         'stock_data': stock_data,
-        'categorias': Categoria.objects.filter(activo=True),
+        # --- CAMBIO 2: Categorías ordenadas de A a Z ---
+        'categorias': Categoria.objects.filter(activo=True).order_by('nombre'),
     })
 
 def crear_stock(request):

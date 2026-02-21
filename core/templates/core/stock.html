@@ -129,12 +129,12 @@
 
                     {% if request.user.is_superuser %}
                     <td class="text-end">
-                        <div class="fw-bold text-danger">S/ {{ fila.producto.costo }}</div>
+                        <div class="fw-bold text-danger">{{ fila.producto.costo }}</div>
                     </td>
                     {% endif %}
 
                     <td class="text-end">
-                        <div class="fw-bold text-dark">S/ {{ fila.producto.precio }}</div>
+                        <div class="fw-bold text-dark">{{ fila.producto.precio }}</div>
                     </td>
 
                     {% for u in ubicaciones %}
