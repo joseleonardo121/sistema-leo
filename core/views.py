@@ -38,8 +38,11 @@ def productos(request):
         productos = productos.filter(codigo__icontains=codigo)
     if categoria:
         productos = productos.filter(categoria_id=categoria)
+        
+    # --- CAMBIO AQUÍ: Filtro de talla EXACTO (Evita que L traiga XL) ---
     if talla:
-        productos = productos.filter(talla__icontains=talla)
+        productos = productos.filter(talla__iexact=talla)
+        
     if diseno:
         productos = productos.filter(diseno__icontains=diseno)
     if color:
@@ -51,9 +54,11 @@ def productos(request):
     
     return render(request, 'core/productos.html', {
         'productos': productos,
-        'categorias': Categoria.objects.filter(activo=True),
-        'codigo': codigo # Para mantener el valor en el buscador principal si se usa
+        # --- CAMBIO AQUÍ: Categorías ordenadas de A a Z ---
+        'categorias': Categoria.objects.filter(activo=True).order_by('nombre'),
+        'codigo': codigo 
     })
+
 from django.shortcuts import render, redirect
 from django.urls import reverse
 from django.contrib import messages  # Añadimos esto
