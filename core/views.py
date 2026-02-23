@@ -769,3 +769,25 @@ def crear_cliente(request):
         return redirect('lista_clientes')
 
 
+
+from django.shortcuts import render, redirect
+from django.contrib import messages
+from .models import Categoria  # Asegúrate de que el nombre del modelo sea correcto
+
+def editar_categoria(request, pk):
+    categoria = get_object_or_404(Categoria, pk=pk)
+    
+    if request.method == 'POST':
+        nombre = request.POST.get('nombre')
+        activo = request.POST.get('activo') == 'on' # Maneja el checkbox de Bootstrap
+        
+        if nombre:
+            categoria.nombre = nombre
+            categoria.activo = activo
+            categoria.save()
+            messages.success(request, f'Categoría "{nombre}" actualizada correctamente.')
+            return redirect('categorias')
+        else:
+            messages.error(request, 'El nombre no puede estar vacío.')
+            
+    return render(request, 'core/editar_categoria.html', {'categoria': categoria})

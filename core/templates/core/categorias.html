@@ -27,7 +27,7 @@
                 <div class="input-group">
                     <span class="input-group-text bg-light border-0 text-muted"><i class="bi bi-funnel"></i></span>
                     <input type="text" name="q" class="form-control border-0 bg-light" 
-                           placeholder="Filtrar por nombre (Ej: Leggins, Tops...)" value="{{ request.GET.q }}">
+                           placeholder="Filtrar por nombre (Ej: Leggins, Tops...)" value="{{ request.GET.q|default:'' }}">
                 </div>
             </div>
             <div class="col-auto">
@@ -80,7 +80,7 @@
 
                             <td class="text-end pe-4">
                                 <div class="d-flex justify-content-end gap-2">
-                                    <a href="#" class="btn btn-light btn-sm rounded-3 shadow-xs" title="Editar">
+                                    <a href="{% url 'editar_categoria' c.id %}" class="btn btn-light btn-sm rounded-3 shadow-xs" title="Editar">
                                         <i class="bi bi-pencil text-primary"></i>
                                     </a>
 
@@ -113,53 +113,16 @@
 </div>
 
 <style>
-    /* Estilos Premium para Categorías */
     .avatar-cat {
-        width: 36px;
-        height: 36px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 1rem;
-        border: 1px solid #f1f5f9;
+        width: 36px; height: 36px; display: flex; align-items: center; justify-content: center;
+        font-size: 1rem; border: 1px solid #f1f5f9;
     }
-
-    /* Soft Badges */
-    .badge-soft-success {
-        background-color: #d1fae5;
-        color: #065f46;
-        padding: 0.5rem 1rem;
-        border-radius: 50px;
-        font-weight: 600;
-        font-size: 0.75rem;
-    }
-
-    .badge-soft-secondary {
-        background-color: #f1f5f9;
-        color: #475569;
-        padding: 0.5rem 1rem;
-        border-radius: 50px;
-        font-weight: 600;
-        font-size: 0.75rem;
-    }
-
-    .shadow-xs {
-        box-shadow: 0 1px 2px rgba(0,0,0,0.05);
-    }
-
-    .table tbody tr {
-        transition: all 0.2s;
-    }
-
-    .table tbody tr:hover {
-        background-color: #f8faff !important;
-    }
-
-    .form-control:focus {
-        background-color: #fff !important;
-        box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1) !important;
-        border: 1px solid #4f46e5 !important;
-    }
+    .badge-soft-success { background-color: #d1fae5; color: #065f46; padding: 0.5rem 1rem; border-radius: 50px; font-weight: 600; font-size: 0.75rem; }
+    .badge-soft-secondary { background-color: #f1f5f9; color: #475569; padding: 0.5rem 1rem; border-radius: 50px; font-weight: 600; font-size: 0.75rem; }
+    .shadow-xs { box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
+    .table tbody tr { transition: all 0.2s; }
+    .table tbody tr:hover { background-color: #f8faff !important; }
+    .form-control:focus { background-color: #fff !important; box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1) !important; border: 1px solid #4f46e5 !important; }
 </style>
 
 {% endblock %}

@@ -1,0 +1,64 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Editar Categoría{% endblock %}
+
+{% block section_title %}Configuración{% endblock %}
+
+{% block content %}
+
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card shadow-sm border-0 rounded-4">
+            <div class="card-header bg-white border-0 pt-4 px-4">
+                <h5 class="fw-bold text-dark mb-0">
+                    <i class="bi bi-pencil-square me-2 text-primary"></i>Editar Categoría
+                </h5>
+                <p class="text-muted small">Modifica el nombre o el estado de la categoría seleccionada.</p>
+            </div>
+            
+            <div class="card-body p-4">
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    <div class="mb-3">
+                        <label for="nombre" class="form-label small fw-bold text-muted text-uppercase">Nombre de la Categoría</label>
+                        <input type="text" name="nombre" id="nombre" class="form-control border-0 bg-light rounded-3" 
+                               value="{{ categoria.nombre }}" required>
+                    </div>
+
+                    <div class="mb-4">
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" name="activo" id="activo" 
+                                   {% if categoria.activo %}checked{% endif %}>
+                            <label class="form-check-label small fw-bold text-muted" for="activo">CATEGORÍA ACTIVA</label>
+                        </div>
+                        <div class="form-text" style="font-size: 0.75rem;">Si se desactiva, no aparecerá en los filtros de productos.</div>
+                    </div>
+
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary rounded-3 px-4 shadow-sm">
+                            <i class="bi bi-save me-1"></i> Guardar Cambios
+                        </button>
+                        <a href="{% url 'categorias' %}" class="btn btn-light rounded-3 px-4">
+                            Cancelar
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .form-control:focus {
+        background-color: #fff !important;
+        box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1) !important;
+        border: 1px solid #4f46e5 !important;
+    }
+    .form-check-input:checked {
+        background-color: #4f46e5;
+        border-color: #4f46e5;
+    }
+</style>
+
+{% endblock %}
