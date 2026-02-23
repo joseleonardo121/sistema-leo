@@ -72,7 +72,7 @@
 
 <div class="card shadow-sm border-0 rounded-4 overflow-hidden">
     <div class="table-responsive">
-        <table class="table table-hover align-middle mb-0">
+        <table class="table table-hover align-middle mb-0" id="tablaStockMaster">
             <thead class="bg-light">
                 <tr class="text-uppercase small text-muted fw-bold" style="letter-spacing: 0.5px; font-size: 11px;">
                     <th class="ps-4 py-3">Detalle del Producto</th>
@@ -85,7 +85,7 @@
                     <th class="text-end py-3">Precio</th>
                     
                     {% for u in ubicaciones %}
-                        <th class="text-center py-3 border-start">
+                        <th class="text-center py-3 border-start col-tienda-header" data-tienda="{{ u.nombre }}">
                             <span class="text-dark">{{ u.nombre }}</span>
                             <div style="font-size: 9px;" class="text-muted fw-normal">{{ u.tipo }}</div>
                         </th>
@@ -138,11 +138,11 @@
                     </td>
 
                     {% for u in ubicaciones %}
-                        <td class="text-center border-start">
+                        <td class="text-center border-start celda-stock">
                             {% with cant=fila.cantidades|get_item:u.id %}
                                 {% if cant > 0 %}
                                     <div class="d-inline-flex align-items-center position-relative px-2">
-                                        <span class="fw-bold {% if u.tipo == 'ALMACEN' %}text-primary{% else %}text-dark{% endif %}" style="font-size: 1.05rem;">
+                                        <span class="fw-bold {% if u.tipo == 'ALMACEN' %}text-primary{% else %}text-dark{% endif %} val-cant" style="font-size: 1.05rem;">
                                             {{ cant }}
                                         </span>
                                         {% if cant > 1 %}
@@ -150,14 +150,14 @@
                                         {% endif %}
                                     </div>
                                 {% else %}
-                                    <span class="text-muted opacity-25" style="font-size: 0.9rem;">0</span>
+                                    <span class="text-muted opacity-25 val-cant" style="font-size: 0.9rem;">0</span>
                                 {% endif %}
                             {% endwith %}
                         </td>
                     {% endfor %}
 
-                    <td class="text-center pe-4 bg-primary bg-opacity-10">
-                        <span class="badge {% if fila.total > 5 %}bg-primary{% else %}bg-warning text-dark{% endif %} rounded-pill px-3 py-2 shadow-sm">
+                    <td class="text-center pe-4 bg-primary bg-opacity-10 col-total-fila">
+                        <span class="badge {% if fila.total > 5 %}bg-primary{% else %}bg-warning text-dark{% endif %} rounded-pill px-3 py-2 shadow-sm total-item-val">
                             {{ fila.total }} uds.
                         </span>
                     </td>
@@ -175,6 +175,30 @@
             {% endfor %}
             </tbody>
         </table>
+    </div>
+</div>
+
+<div class="mt-3 p-3 bg-white rounded-4 shadow-sm border">
+    <div class="row align-items-center">
+        <div class="col-md-4">
+            <div class="text-muted small">
+                <i class="bi bi-info-circle me-1 text-primary"></i>
+                Mostrando <strong>{{ stock_data|length }}</strong> artículos en inventario.
+            </div>
+        </div>
+        <div class="col-md-8 text-md-end">
+            <div class="d-flex flex-wrap justify-content-md-end gap-2 align-items-center">
+                <div id="contenedorTiendasResumen" class="d-flex gap-2 flex-wrap">
+                    </div>
+                <div class="vr mx-2 d-none d-md-block"></div>
+                <div class="text-end">
+                    <span class="text-muted small text-uppercase fw-bold" style="font-size: 10px; letter-spacing: 1px;">Suma Total Stock</span>
+                    <div class="fw-bold text-primary" style="font-size: 1.2rem;">
+                        <span id="sumaTotalMaster">0</span> <small style="font-size: 0.7rem;">uds.</small>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -222,18 +246,81 @@
     .bg-warning { background-color: #fbbf24 !important; }
     .bg-primary { background-color: #4f46e5 !important; }
 
-    /* DISTINTIVO DE STOCK MÚLTIPLE (> 1) */
     .distintivo-multi {
         position: absolute;
         top: 2px;
         right: -2px;
         width: 6px;
         height: 6px;
-        background-color: #10b981; /* Verde esmeralda */
+        background-color: #10b981;
         border-radius: 50%;
         border: 1px solid white;
         box-shadow: 0 0 4px rgba(16, 185, 129, 0.6);
     }
+
+    /* Estilo para las burbujas de resumen */
+    .badge-resumen-stock {
+        font-size: 11px; padding: 4px 10px; border-radius: 8px;
+        background: #f8fafc; border: 1px solid #e2e8f0; color: #475569;
+        display: inline-flex; align-items: center;
+    }
 </style>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    const tabla = document.getElementById('tablaStockMaster');
+    if (!tabla) return;
+
+    let granTotal = 0;
+    const cabeceras = tabla.querySelectorAll('.col-tienda-header');
+    const mapaTiendas = {};
+
+    // 1. Identificar índices de columnas de tiendas
+    const indicesTiendas = [];
+    cabeceras.forEach((th, index) => {
+        // Obtenemos el índice real de la columna dentro de la fila (tr)
+        // th.cellIndex nos da la posición exacta
+        indicesTiendas.push({
+            index: th.cellIndex,
+            nombre: th.getAttribute('data-tienda')
+        });
+        mapaTiendas[th.getAttribute('data-tienda')] = 0;
+    });
+
+    // 2. Recorrer las filas del cuerpo para sumar
+    const filas = tabla.querySelectorAll('tbody tr');
+    filas.forEach(fila => {
+        // Sumar totales por tienda (columnas dinámicas)
+        indicesTiendas.forEach(item => {
+            const celda = fila.cells[item.index];
+            if (celda) {
+                const valCant = celda.querySelector('.val-cant');
+                if (valCant) {
+                    mapaTiendas[item.nombre] += parseInt(valCant.innerText) || 0;
+                }
+            }
+        });
+
+        // Sumar Gran Total (última columna)
+        const totalFila = fila.querySelector('.total-item-val');
+        if (totalFila) {
+            granTotal += parseInt(totalFila.innerText.replace(' uds.', '')) || 0;
+        }
+    });
+
+    // 3. Renderizar resultados
+    document.getElementById('sumaTotalMaster').innerText = granTotal;
+    const contenedor = document.getElementById('contenedorTiendasResumen');
+    
+    for (const [tienda, suma] of Object.entries(mapaTiendas)) {
+        if (suma > 0) {
+            const span = document.createElement('span');
+            span.className = 'badge-resumen-stock';
+            span.innerHTML = `<i class="bi bi-geo-alt me-1 text-primary"></i> ${tienda}: <strong class="ms-1">${suma}</strong>`;
+            contenedor.appendChild(span);
+        }
+    }
+});
+</script>
 
 {% endblock %}

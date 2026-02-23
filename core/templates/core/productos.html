@@ -76,7 +76,7 @@
                 <tr class="text-uppercase small text-muted fw-bold" style="letter-spacing: 0.5px; font-size: 11px;">
                     <th class="ps-4 py-3" style="width: 50px;">Estado</th>
                     <th class="py-3">Información del Producto</th>
-                    <th class="py-3 text-center">Stock Actual</th>
+                    <th class="py-3 text-center">Distribución de Stock</th>
                     <th class="py-3 text-center">Categoría</th>
                     <th class="text-end py-3">Finanzas (S/)</th>
                     <th class="text-center py-3 pe-4">Acciones</th>
@@ -110,15 +110,26 @@
                     </td>
 
                     <td class="text-center">
-                        {% if p.total_stock > 0 %}
-                            <span class="badge rounded-pill bg-success bg-opacity-10 text-success border border-success border-opacity-25 px-3 py-2">
-                                <i class="bi bi-boxes me-1"></i> {{ p.total_stock }} uds.
-                            </span>
-                        {% else %}
-                            <span class="badge rounded-pill bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25 px-3 py-2 pulse-stock">
-                                <i class="bi bi-exclamation-triangle me-1"></i> Sin Stock
-                            </span>
-                        {% endif %}
+                        <div class="d-flex flex-column align-items-center gap-1">
+                            {% if p.total_stock > 0 %}
+                                <span class="badge rounded-pill bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 px-3 py-1 mb-1 fw-bold">
+                                    Total: {{ p.total_stock }} uds.
+                                </span>
+                                <div class="d-flex flex-wrap justify-content-center gap-1">
+                                    {% for s in p.stocks.all %}
+                                        {% if s.cantidad > 0 %}
+                                        <span class="text-muted tag-ubicacion" data-ubicacion="{{ s.ubicacion.nombre }}" style="font-size: 10px; background: #f8fafc; padding: 2px 6px; border-radius: 4px; border: 1px solid #e2e8f0;">
+                                            {{ s.ubicacion.nombre|slice:":3" }}: <strong class="cant-val">{{ s.cantidad }}</strong>
+                                        </span>
+                                        {% endif %}
+                                    {% endfor %}
+                                </div>
+                            {% else %}
+                                <span class="badge rounded-pill bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25 px-3 py-2 pulse-stock">
+                                    <i class="bi bi-exclamation-triangle me-1"></i> Sin Stock
+                                </span>
+                            {% endif %}
+                        </div>
                     </td>
 
                     <td class="text-center">
@@ -166,6 +177,32 @@
     </div>
 </div>
 
+<div class="mt-3 p-3 bg-white rounded-4 shadow-sm border">
+    <div class="row align-items-center">
+        <div class="col-md-4">
+            <div class="text-muted small">
+                <i class="bi bi-info-circle me-1 text-primary"></i>
+                Mostrando <strong>{{ productos|length }}</strong> productos filtrados.
+            </div>
+        </div>
+        <div class="col-md-8">
+            <div class="d-flex flex-wrap justify-content-md-end gap-3 align-items-center">
+                <div id="desgloseTiendasResumen" class="d-flex gap-2">
+                    </div>
+                
+                <div class="vr d-none d-md-block"></div>
+
+                <div class="text-end">
+                    <span class="text-muted small text-uppercase fw-bold" style="font-size: 10px; letter-spacing: 1px;">Suma Total General</span>
+                    <div class="fw-bold text-primary" style="font-size: 1.2rem;">
+                        <span id="sumaStock">0</span> <small style="font-size: 0.7rem;">uds.</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <style>
     .avatar-product { width: 42px; height: 42px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; border: 1px solid #f1f5f9; }
     .estado-dot { width: 12px; height: 12px; border-radius: 50%; display: inline-block; }
@@ -183,8 +220,15 @@
         50% { opacity: 0.6; }
         100% { opacity: 1; }
     }
-    .pulse-stock {
-        animation: pulse-red-lite 2s infinite ease-in-out;
+    .pulse-stock { animation: pulse-red-lite 2s infinite ease-in-out; }
+    
+    .badge-resumen-tienda {
+        font-size: 11px;
+        padding: 4px 10px;
+        border-radius: 8px;
+        background: #f1f5f9;
+        border: 1px solid #e2e8f0;
+        color: #475569;
     }
 </style>
 
@@ -192,6 +236,41 @@
 function confirmarDesactivacion(codigo) {
     return confirm(`¿Estás seguro de desactivar el producto ${codigo}? No aparecerá en las ventas activas.`);
 }
+
+document.addEventListener("DOMContentLoaded", function() {
+    let totalGeneral = 0;
+    let totalesPorTienda = {};
+
+    // 1. Recorrer todos los tags de ubicaciones en la tabla
+    document.querySelectorAll('.tag-ubicacion').forEach(tag => {
+        let nombreTienda = tag.getAttribute('data-ubicacion');
+        let cantidad = parseInt(tag.querySelector('.cant-val').innerText) || 0;
+
+        // Sumar al total de esa tienda específica
+        if (totalesPorTienda[nombreTienda]) {
+            totalesPorTienda[nombreTienda] += cantidad;
+        } else {
+            totalesPorTienda[nombreTienda] = cantidad;
+        }
+    });
+
+    // 2. Sumar el Total General (usando los badges de Total: )
+    document.querySelectorAll('.table .badge.bg-primary').forEach(el => {
+        let texto = el.innerText.replace('Total:', '').replace(' uds.', '').trim();
+        totalGeneral += parseInt(texto) || 0;
+    });
+
+    // 3. Pintar los resultados en el resumen inferior
+    const contenedorTiendas = document.getElementById('desgloseTiendasResumen');
+    document.getElementById('sumaStock').innerText = totalGeneral;
+
+    for (const [tienda, suma] of Object.entries(totalesPorTienda)) {
+        const span = document.createElement('span');
+        span.className = 'badge-resumen-tienda';
+        span.innerHTML = `<i class="bi bi-geo-alt text-secondary me-1"></i>${tienda}: <strong>${suma}</strong>`;
+        contenedorTiendas.appendChild(span);
+    }
+});
 </script>
 
 {% endblock %}

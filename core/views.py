@@ -31,8 +31,7 @@ def productos(request):
     marca = request.GET.get('marca')
 
     # Base QuerySet con la suma de stock
-    productos = Producto.objects.annotate(total_stock=Sum('stocks__cantidad'))
-
+    productos = Producto.objects.annotate(total_stock=Sum('stocks__cantidad')).prefetch_related('stocks__ubicacion')
     # Aplicamos filtros si existen
     if codigo:
         productos = productos.filter(codigo__icontains=codigo)
