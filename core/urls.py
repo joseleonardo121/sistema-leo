@@ -33,5 +33,6 @@ urlpatterns = [
     path('traspasos/historial/', views.historial_traspasos, name='historial_traspasos'),
     path('reposicion/historial/', views.historial_reposiciones, name='historial_reposiciones'),
     path('categorias/editar/<int:pk>/', views.editar_categoria, name='editar_categoria'),
+    path('producto/<int:pk>/historial/', views.historial_producto, name='historial_producto'),
 ]
 

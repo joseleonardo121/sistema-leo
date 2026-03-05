@@ -151,6 +151,9 @@
                                 <a href="{% url 'editar_producto' p.id %}" class="btn btn-white btn-sm border-end" title="Editar datos">
                                     <i class="bi bi-pencil-square text-primary"></i>
                                 </a>
+                                <a href="{% url 'historial_producto' p.id %}" class="btn btn-white btn-sm border-end" title="Ver Historial de Cambios">
+                                    <i class="bi bi-clock-history text-info"></i>
+                                </a>
                                 <a href="{% url 'stock_masivo_producto' p.id %}" class="btn btn-white btn-sm" title="Gestionar Stock">
                                     <i class="bi bi-box-seam text-warning"></i>
                                 </a>
@@ -187,11 +190,8 @@
         </div>
         <div class="col-md-8">
             <div class="d-flex flex-wrap justify-content-md-end gap-3 align-items-center">
-                <div id="desgloseTiendasResumen" class="d-flex gap-2">
-                    </div>
-                
+                <div id="desgloseTiendasResumen" class="d-flex gap-2"></div>
                 <div class="vr d-none d-md-block"></div>
-
                 <div class="text-end">
                     <span class="text-muted small text-uppercase fw-bold" style="font-size: 10px; letter-spacing: 1px;">Suma Total General</span>
                     <div class="fw-bold text-primary" style="font-size: 1.2rem;">
@@ -241,12 +241,9 @@ document.addEventListener("DOMContentLoaded", function() {
     let totalGeneral = 0;
     let totalesPorTienda = {};
 
-    // 1. Recorrer todos los tags de ubicaciones en la tabla
     document.querySelectorAll('.tag-ubicacion').forEach(tag => {
         let nombreTienda = tag.getAttribute('data-ubicacion');
         let cantidad = parseInt(tag.querySelector('.cant-val').innerText) || 0;
-
-        // Sumar al total de esa tienda específica
         if (totalesPorTienda[nombreTienda]) {
             totalesPorTienda[nombreTienda] += cantidad;
         } else {
@@ -254,13 +251,11 @@ document.addEventListener("DOMContentLoaded", function() {
         }
     });
 
-    // 2. Sumar el Total General (usando los badges de Total: )
     document.querySelectorAll('.table .badge.bg-primary').forEach(el => {
         let texto = el.innerText.replace('Total:', '').replace(' uds.', '').trim();
         totalGeneral += parseInt(texto) || 0;
     });
 
-    // 3. Pintar los resultados en el resumen inferior
     const contenedorTiendas = document.getElementById('desgloseTiendasResumen');
     document.getElementById('sumaStock').innerText = totalGeneral;
 

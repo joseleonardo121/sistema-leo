@@ -791,3 +791,24 @@ def editar_categoria(request, pk):
             messages.error(request, 'El nombre no puede estar vacío.')
             
     return render(request, 'core/editar_categoria.html', {'categoria': categoria})
+
+
+from django.shortcuts import get_object_or_404, render
+
+def historial_producto(request, pk):
+    producto = get_object_or_404(Producto, pk=pk)
+    historial = producto.history.all()
+    
+    # Añadimos una lógica para comparar cada registro con el anterior
+    for registro in historial:
+        if registro.prev_record:
+            # Obtenemos los cambios comparando el registro actual con el anterior
+            delta = registro.diff_against(registro.prev_record)
+            registro.cambios = delta.changes
+        else:
+            registro.cambios = []
+
+    return render(request, 'core/historial_producto.html', {
+        'producto': producto,
+        'historial': historial
+    })

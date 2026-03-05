@@ -1,0 +1,74 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Historial - {{ producto.codigo }}{% endblock %}
+
+{% block content %}
+<div class="row mb-4 align-items-center">
+    <div class="col-md-8">
+        <h4 class="fw-bold text-dark mb-0"><i class="bi bi-clock-history me-2 text-primary"></i>Detalle de Modificaciones</h4>
+        <p class="text-muted small">Producto: <strong>{{ producto.codigo }}</strong></p>
+    </div>
+    <div class="col-md-4 text-md-end">
+        <a href="{% url 'productos' %}" class="btn btn-light border rounded-3">Volver</a>
+    </div>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-lg-10">
+        <div class="card shadow-sm border-0 rounded-4 p-4">
+            <div class="timeline-container">
+                {% for registro in historial %}
+                <div class="timeline-item position-relative ps-5 pb-5 border-start">
+                    <div class="timeline-icon position-absolute rounded-circle shadow-sm d-flex align-items-center justify-content-center 
+                        {% if registro.history_type == '+' %}bg-success{% else %}bg-primary{% endif %}" 
+                        style="left: -15px; top: 0; width: 30px; height: 30px;">
+                        <i class="bi {% if registro.history_type == '+' %}bi-plus-lg{% else %}bi-pencil-fill{% endif %} text-white small"></i>
+                    </div>
+
+                    <div class="timeline-content bg-light p-3 rounded-4">
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="fw-bold text-dark">
+                                {% if registro.history_type == '+' %}Registro Inicial{% else %}Cambio Detectado{% endif %}
+                            </span>
+                            <span class="badge bg-white text-dark border rounded-pill">
+                                {{ registro.history_date|date:"d/m/Y H:i" }}
+                            </span>
+                        </div>
+                        
+                        <div class="text-muted small mb-3">
+                            <i class="bi bi-person me-1"></i> Usuario: <strong>{{ registro.history_user|default:"Admin" }}</strong>
+                        </div>
+
+                        {% if registro.cambios %}
+                            <div class="bg-white border rounded-3 p-3">
+                                <h6 class="text-uppercase fw-bold text-primary mb-2" style="font-size: 10px;">Campos modificados:</h6>
+                                <ul class="list-unstyled mb-0">
+                                    {% for cambio in registro.cambios %}
+                                        <li class="mb-1" style="font-size: 0.9rem;">
+                                            <i class="bi bi-arrow-right-short text-success"></i>
+                                            <strong class="text-secondary">{{ cambio.field|capfirst }}:</strong> 
+                                            <span class="text-muted text-decoration-line-through mx-1">{{ cambio.old }}</span>
+                                            <i class="bi bi-chevron-right text-silver" style="font-size: 10px;"></i>
+                                            <span class="fw-bold text-dark">{{ cambio.new }}</span>
+                                        </li>
+                                    {% endfor %}
+                                </ul>
+                            </div>
+                        {% else %}
+                            <p class="small text-muted mb-0 italic">Sin cambios en los datos maestros.</p>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .timeline-item { border-left: 2px dashed #dee2e6 !important; }
+    .timeline-item:last-child { border-left: 2px solid transparent !important; }
+    .bg-light { background-color: #f8faff !important; }
+    .text-silver { color: #cbd5e1; }
+</style>
+{% endblock %}

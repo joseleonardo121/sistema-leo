@@ -8,6 +8,9 @@ class Categoria(models.Model):
 
     def __str__(self):
         return self.nombre
+    
+from django.db import models
+from simple_history.models import HistoricalRecords  # <--- ASEGÚRATE DE IMPORTAR ESTO ARRIBA
 
 class Producto(models.Model):
     imagen = models.ImageField(upload_to='productos/', null=True, blank=True)
@@ -27,6 +30,8 @@ class Producto(models.Model):
 
     activo = models.BooleanField(default=True)
     creado = models.DateTimeField(auto_now_add=True)
+
+    history = HistoricalRecords()
 
     def __str__(self):
         return f"{self.codigo} - {self.diseno} ({self.color})"
